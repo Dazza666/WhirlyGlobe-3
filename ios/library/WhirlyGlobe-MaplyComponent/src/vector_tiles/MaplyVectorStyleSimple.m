@@ -125,11 +125,12 @@
 
 - (id)initWithGen:(MaplyVectorStyleSimpleGenerator *)gen viewC:(NSObject<MaplyRenderControllerProtocol> *)viewC
 {
+    //darren
     self = [super initWithGen:gen viewC:viewC];
     float red = drand48()/2.0;
     float green = drand48()/2.0;
     float blue = 0.0;
-    _color = [UIColor colorWithRed:red+0.5 green:green+0.5 blue:blue+0.5 alpha:0.5];
+    _color = [UIColor colorWithRed:red+0.5 green:green+0.5 blue:blue+0.5 alpha:1.0];
     
     return self;
 }

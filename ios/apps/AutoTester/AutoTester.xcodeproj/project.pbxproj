@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		12586E2324D1E77C0062AB2C /* zoom0.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 12586E2124D1E77C0062AB2C /* zoom0.mbtiles */; };
+		12586E2524D1E8170062AB2C /* coastline-roads-urban.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 12586E2424D1E8160062AB2C /* coastline-roads-urban.mbtiles */; };
 		2B158BEF1D5D19E900103E04 /* VectorHoleTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B158BEE1D5D19E900103E04 /* VectorHoleTestCase.m */; };
 		2B1806D322AECF4300DD3DB1 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B1806D122AECF4200DD3DB1 /* Accelerate.framework */; };
 		2B1C26531C91037100C71B0A /* France.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 2B1C26511C9100A500C71B0A /* France.mbtiles */; };
@@ -562,6 +564,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		12586E2124D1E77C0062AB2C /* zoom0.mbtiles */ = {isa = PBXFileReference; lastKnownFileType = file; path = zoom0.mbtiles; sourceTree = "<group>"; };
+		12586E2424D1E8160062AB2C /* coastline-roads-urban.mbtiles */ = {isa = PBXFileReference; lastKnownFileType = file; path = "coastline-roads-urban.mbtiles"; sourceTree = "<group>"; };
 		2B127BFE201802BB0099F405 /* OpenMapTilesHybridTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMapTilesHybridTestCase.swift; sourceTree = "<group>"; };
 		2B158BED1D5D19E900103E04 /* VectorHoleTestCase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VectorHoleTestCase.h; sourceTree = "<group>"; };
 		2B158BEE1D5D19E900103E04 /* VectorHoleTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VectorHoleTestCase.m; sourceTree = "<group>"; };
@@ -1297,6 +1301,8 @@
 		88E4B8C11B83B6AB0050D21B /* AutoTester */ = {
 			isa = PBXGroup;
 			children = (
+				12586E2424D1E8160062AB2C /* coastline-roads-urban.mbtiles */,
+				12586E2124D1E77C0062AB2C /* zoom0.mbtiles */,
 				2B29944A243BA08D00677DE4 /* MapboxKindaMap.swift */,
 				88E4B8C81B83B6AB0050D21B /* Main.storyboard */,
 				88E4B8C21B83B6AB0050D21B /* Supporting Files */,
@@ -1965,6 +1971,7 @@
 				88FF5ED01BC31D95002F15CE /* TJK.geojson in Resources */,
 				88FF5ED51BC31D95002F15CE /* TTO.geojson in Resources */,
 				88FF5E061BC31D95002F15CE /* BDI.geojson in Resources */,
+				12586E2524D1E8170062AB2C /* coastline-roads-urban.mbtiles in Resources */,
 				88FF5EEA1BC31D95002F15CE /* YEM.geojson in Resources */,
 				88FF5E111BC31D95002F15CE /* BLR.geojson in Resources */,
 				88FF5ED61BC31D95002F15CE /* TUN.geojson in Resources */,
@@ -2040,6 +2047,7 @@
 				88FF5BE81BC31D53002F15CE /* Smiley_Face_Avatar_by_PixelTwist.png in Resources */,
 				88FF5E871BC31D95002F15CE /* MLT.geojson in Resources */,
 				88FF5E961BC31D95002F15CE /* NER.geojson in Resources */,
+				12586E2324D1E77C0062AB2C /* zoom0.mbtiles in Resources */,
 				88FF5EC51BC31D95002F15CE /* SVK.geojson in Resources */,
 				88FF5E861BC31D95002F15CE /* MLI.geojson in Resources */,
 				88FF5EAB1BC31D95002F15CE /* PRT.geojson in Resources */,

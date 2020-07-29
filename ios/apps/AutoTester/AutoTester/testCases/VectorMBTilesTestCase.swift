@@ -35,8 +35,10 @@ class VectorMBTilesTestCase: MaplyTestCase {
         sampleParams.singleLevel = true
         sampleParams.coverPoles = false
         sampleParams.edgeMatching = false
+        sampleParams.forceMinLevel = false
         sampleParams.minZoom = 0
         sampleParams.maxZoom = tileFetcher.maxZoom()
+
             
         // This parses the actual vector data and turns it into geometry
         let vectorStyle = MaplyVectorStyleSimpleGenerator(viewC: baseVC)
@@ -59,7 +61,10 @@ class VectorMBTilesTestCase: MaplyTestCase {
 //        if let wrap = addVectorTiles("out-3", baseVC: baseVC) {
 //            vecTiles.append(wrap)
 //        }
-        if let wrap = addVectorTiles("France", baseVC: baseVC) {
+//        if let wrap = addVectorTiles("your_data", baseVC: baseVC) {
+//            vecTiles.append(wrap)
+//        }
+        if let wrap = addVectorTiles("coastline-roads-urban", baseVC: baseVC) {
             vecTiles.append(wrap)
         }
     }
