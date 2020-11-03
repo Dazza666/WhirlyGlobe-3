@@ -25,47 +25,9 @@
 
 namespace WhirlyKit
 {
-    
-// Metal version of the tweaker
-void WideVectorTweakerMTL::tweakForFrame(Drawable *inDraw,RendererFrameInfo *inFrameInfo)
-{
-    if (!inFrameInfo->program || inFrameInfo->sceneRenderer->getType() != SceneRenderer::RenderMetal)
-        return;
-    BasicDrawable *basicDraw = dynamic_cast<BasicDrawable *>(inDraw);
-    if (!basicDraw)
-        return;
- 
-    RendererFrameInfoMTL *frameInfo = (RendererFrameInfoMTL *)inFrameInfo;
-    
-    float scale = std::max(frameInfo->sceneRenderer->framebufferWidth,frameInfo->sceneRenderer->framebufferHeight);
-    float screenSize = frameInfo->screenSizeInDisplayCoords.x();
-    float pixDispSize = std::min(frameInfo->screenSizeInDisplayCoords.x(),frameInfo->screenSizeInDisplayCoords.y()) / scale;
-    float texScale = scale/(screenSize*texRepeat);
-    
-    WhirlyKitShader::UniformWideVec uniWV;
-    if (realWidthSet)
-    {
-        uniWV.w2 = (float)(realWidth / pixDispSize);
-        uniWV.real_w2 = realWidth;
-    } else {
-        uniWV.w2 = lineWidth;
-        uniWV.real_w2 = pixDispSize * lineWidth;
-    }
-    uniWV.edge = edgeSize;
-    uniWV.texScale = texScale;
-    uniWV.color[0] = color.r/255.0;
-    uniWV.color[1] = color.g/255.0;
-    uniWV.color[2] = color.b/255.0;
-    uniWV.color[3] = color.a/255.0;
-    
-    BasicDrawable::UniformBlock uniBlock;
-    uniBlock.blockData = RawDataRef(new RawNSDataReader([[NSData alloc] initWithBytes:&uniWV length:sizeof(uniWV)]));
-    uniBlock.bufferID = WKSUniformDrawStateWideVecBuffer;
-    basicDraw->setUniBlock(uniBlock);
-}
 
-WideVectorDrawableBuilderMTL::WideVectorDrawableBuilderMTL(const std::string &name)
-: BasicDrawableBuilderMTL(name)
+WideVectorDrawableBuilderMTL::WideVectorDrawableBuilderMTL(const std::string &name,Scene *scene)
+: BasicDrawableBuilderMTL(name,scene)
 {
 }
     
@@ -77,17 +39,17 @@ void WideVectorDrawableBuilderMTL::Init(unsigned int numVert, unsigned int numTr
     // Wire up the buffers
     // TODO: Merge these into a single data structure
     if (globeMode)
-        ((VertexAttributeMTL *)basicDraw->vertexAttributes[basicDraw->normalEntry])->bufferIndex = WKSVertexNormalAttribute;
-    ((VertexAttributeMTL *)basicDraw->vertexAttributes[basicDraw->colorEntry])->bufferIndex = WKSVertexColorAttribute;
-    ((VertexAttributeMTL *)basicDraw->vertexAttributes[p1_index])->bufferIndex = WKSVertexWideVecP1Attribute;
-    ((VertexAttributeMTL *)basicDraw->vertexAttributes[tex_index])->bufferIndex = WKSVertexWideVecTexInfoAttribute;
-    ((VertexAttributeMTL *)basicDraw->vertexAttributes[n0_index])->bufferIndex = WKSVertexWideVecN0Attribute;
-    ((VertexAttributeMTL *)basicDraw->vertexAttributes[c0_index])->bufferIndex = WKSVertexWideVecC0Attribute;
+        ((VertexAttributeMTL *)basicDraw->vertexAttributes[basicDraw->normalEntry])->slot = WhirlyKitShader::WKSVertexNormalAttribute;
+    ((VertexAttributeMTL *)basicDraw->vertexAttributes[basicDraw->colorEntry])->slot = WhirlyKitShader::WKSVertexColorAttribute;
+    ((VertexAttributeMTL *)basicDraw->vertexAttributes[p1_index])->slot = WhirlyKitShader::WKSVertexWideVecP1Attribute;
+    ((VertexAttributeMTL *)basicDraw->vertexAttributes[tex_index])->slot = WhirlyKitShader::WKSVertexWideVecTexInfoAttribute;
+    ((VertexAttributeMTL *)basicDraw->vertexAttributes[n0_index])->slot = WhirlyKitShader::WKSVertexWideVecN0Attribute;
+    ((VertexAttributeMTL *)basicDraw->vertexAttributes[c0_index])->slot = WhirlyKitShader::WKSVertexWideVecC0Attribute;
 }
 
 WideVectorTweaker *WideVectorDrawableBuilderMTL::makeTweaker()
 {
-    return new WideVectorTweakerMTL();
+    return NULL;
 }
 
 BasicDrawable *WideVectorDrawableBuilderMTL::getDrawable()
@@ -96,8 +58,41 @@ BasicDrawable *WideVectorDrawableBuilderMTL::getDrawable()
         return BasicDrawableBuilderMTL::getDrawable();
     
     BasicDrawable *theDraw = BasicDrawableBuilderMTL::getDrawable();
-    setupTweaker(theDraw);
+
+    // Uniforms for regular wide vectors
+    WhirlyKitShader::UniformWideVec uniWV;
+    memset(&uniWV,0,sizeof(uniWV));
+    uniWV.w2 = lineWidth/2.0;
+    uniWV.edge = edgeSize;
+    uniWV.texRepeat = texRepeat;
+    uniWV.color[0] = color.r/255.0;
+    uniWV.color[1] = color.g/255.0;
+    uniWV.color[2] = color.b/255.0;
+    uniWV.color[3] = color.a/255.0;
+    uniWV.hasExp = widthExp || colorExp || opacityExp || includeExp;
+
+    BasicDrawable::UniformBlock uniBlock;
+    uniBlock.blockData = RawDataRef(new RawNSDataReader([[NSData alloc] initWithBytes:&uniWV length:sizeof(uniWV)]));
+    uniBlock.bufferID = WhirlyKitShader::WKSUniformWideVecEntry;
+    basicDraw->setUniBlock(uniBlock);
     
+    // Expression uniforms, if we're using those
+    if (uniWV.hasExp) {
+        WhirlyKitShader::UniformWideVecExp wideVecExp;
+        memset(&wideVecExp, 0, sizeof(wideVecExp));
+        if (widthExp)
+            FloatExpressionToMtl(widthExp,wideVecExp.widthExp);
+        if (opacityExp)
+            FloatExpressionToMtl(opacityExp,wideVecExp.opacityExp);
+        if (colorExp)
+            ColorExpressionToMtl(colorExp,wideVecExp.colorExp);
+        
+        BasicDrawable::UniformBlock uniBlock;
+        uniBlock.blockData = RawDataRef(new RawNSDataReader([[NSData alloc] initWithBytes:&wideVecExp length:sizeof(wideVecExp)]));
+        uniBlock.bufferID = WhirlyKitShader::WKSUniformWideVecEntryExp;
+        basicDraw->setUniBlock(uniBlock);
+    }
+
     return theDraw;
 }
 

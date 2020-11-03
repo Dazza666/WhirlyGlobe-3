@@ -42,6 +42,8 @@ class VectorMBTilesTestCase : MaplyTestCase {
         implementation = TestExecutionImplementation.Both
     }
 
+    var loader: QuadLoaderBase? = null
+
     fun setupCountriesRaster(control: BaseController) {
         val mbTiles: File
 
@@ -59,7 +61,7 @@ class VectorMBTilesTestCase : MaplyTestCase {
 
         // The fetcher fetches tile from the MBTiles file
         // The fetcher fetches tile from the MBTiles file
-        val mbTileFetcher = MBTileFetcher(mbTiles) ?: return
+        val mbTileFetcher = MBTileFetcher(mbTiles)
 
         // Set up the parameters to match the MBTile file
         // Set up the parameters to match the MBTile file
@@ -73,12 +75,12 @@ class VectorMBTilesTestCase : MaplyTestCase {
 
         val loader = QuadImageLoader(params, mbTileFetcher.tileInfo, control)
         loader.tileFetcher = mbTileFetcher
+        this.loader = loader
     }
 
     fun setupContriesVector(control: BaseController) {
         val mbTiles: File
 
-        // We need to copy the file from the asset so that it can be used as a file
         // We need to copy the file from the asset so that it can be used as a file
         try {
             mbTiles = this.getFile("mbtiles", "mbtiles/countries.mbtiles", "countries.mbtiles")
@@ -91,10 +93,8 @@ class VectorMBTilesTestCase : MaplyTestCase {
         }
 
         // The fetcher fetches tile from the MBTiles file
-        // The fetcher fetches tile from the MBTiles file
-        val mbTileFetcher = MBTileFetcher(mbTiles) ?: return
+        val mbTileFetcher = MBTileFetcher(mbTiles)
 
-        // Set up the parameters to match the MBTile file
         // Set up the parameters to match the MBTile file
         val params = SamplingParams()
         params.coordSystem = SphericalMercatorCoordSystem()
@@ -112,10 +112,11 @@ class VectorMBTilesTestCase : MaplyTestCase {
 
         // Overlay the tile number on top
         val debugInterp = OvlDebugImageLoaderInterpreter()
-        debugInterp!!.setParentInterpreter(interp)
+        debugInterp.setParentInterpreter(interp)
 
-        val loader = QuadPagingLoader(params, mbTileFetcher!!.tileInfo, debugInterp, control)
-        loader!!.setTileFetcher(mbTileFetcher)
+        val loader = QuadPagingLoader(params, mbTileFetcher.tileInfo, debugInterp, control)
+        loader.setTileFetcher(mbTileFetcher)
+        this.loader = loader
     }
 
     fun setupFranceVector(control: BaseController) {
@@ -127,7 +128,7 @@ class VectorMBTilesTestCase : MaplyTestCase {
         params.coordSystem = SphericalMercatorCoordSystem()
         params.singleLevel = true
         params.minZoom = 0
-        params.maxZoom = fetcher!!.maxZoom
+        params.maxZoom = fetcher.maxZoom
 
         // Simple style generator just picks random colors
         val styleGen = VectorStyleSimpleGenerator(control)
@@ -139,8 +140,9 @@ class VectorMBTilesTestCase : MaplyTestCase {
 //        val debugInterp = OvlDebugImageLoaderInterpreter()
 //        debugInterp!!.setParentInterpreter(interp)
 
-        val loader = QuadPagingLoader(params, fetcher!!.tileInfo, interp, control)
-        loader!!.setTileFetcher(fetcher)
+        val loader = QuadPagingLoader(params, fetcher.tileInfo, interp, control)
+        loader.setTileFetcher(fetcher)
+        this.loader = loader
     }
 
     fun setupShapefile(control: BaseController) {
@@ -156,11 +158,11 @@ class VectorMBTilesTestCase : MaplyTestCase {
         control.addVector(shpData,vecInfo,RenderControllerInterface.ThreadMode.ThreadAny)
     }
 
-    var baseCase: VectorsTestCase? = null
+    var baseCase: GeographyClass? = null
 
     override fun setUpWithMap(mapVC: MapController?): Boolean {
-//        baseCase = VectorsTestCase(mapVC!!.getActivity())
-//        baseCase?.setUpWithMap(mapVC)
+        baseCase = GeographyClass(mapVC!!.getActivity())
+        baseCase?.setUpWithMap(mapVC)
 
 //        setupCountriesRaster(mapVC as BaseController)
 //        setupContriesVector(mapVC as BaseController)
@@ -171,8 +173,8 @@ class VectorMBTilesTestCase : MaplyTestCase {
     }
 
     override fun setUpWithGlobe(globeVC: GlobeController?): Boolean {
-//        baseCase = VectorsTestCase(globeVC!!.getActivity())
-//        baseCase?.setUpWithGlobe(globeVC)
+        baseCase = GeographyClass(globeVC!!.getActivity())
+        baseCase?.setUpWithGlobe(globeVC)
 
 //        setupCountriesRaster(globeVC as BaseController)
 //        setupContriesVector(globeVC as BaseController)
@@ -209,4 +211,10 @@ class VectorMBTilesTestCase : MaplyTestCase {
 
         return of
     }
+
+    // Switch maps on long press
+    override fun userDidLongPress(mapController: MapController?, selObjs: Array<SelectedObject?>?, loc: Point2d?, screenLoc: Point2d?) {
+        loader?.reload()
+    }
+
 }

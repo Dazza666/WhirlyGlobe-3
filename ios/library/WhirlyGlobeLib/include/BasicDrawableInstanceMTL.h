@@ -37,30 +37,69 @@ public:
     virtual void setColor(RGBAColor inColor);
     
     /// Set up local rendering structures (e.g. VBOs)
-    virtual void setupForRenderer(const RenderSetupInfo *setupInfo);
+    virtual void setupForRenderer(const RenderSetupInfo *setupInfo,Scene *scene);
     
     /// Clean up any rendering objects you may have (e.g. VBOs).
-    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene);
+    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene,RenderTeardownInfoRef teardown);
     
-    /// We use the calculation step to set up indirect rendering when we're doing that
-    virtual void calculate(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> frameEncode,Scene *scene);
+    /** An all-purpose pre-render that sets up textures, uniforms and such in preparation for rendering
+        Also adds to the list of resources being used by this drawable.
+        Both need to be done each frame.
+     */
+    bool preProcess(SceneRendererMTL *sceneRender,
+                    id<MTLCommandBuffer> cmdBuff,
+                    id<MTLBlitCommandEncoder> bltEncode,
+                    SceneMTL *scene);
+
+    /// List all the resources used by the drawable
+    virtual void enumerateResources(RendererFrameInfoMTL *frameInfo,ResourceRefsMTL &resources);
+    virtual void enumerateBuffers(ResourceRefsMTL &resources);
+
+    /// Some drawables have a pre-render phase that uses the GPU for calculation
+    virtual void encodeDirectCalculate(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,Scene *scene);
+
+    /// Draw directly, once per frame
+    virtual void encodeDirect(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,Scene *scene);
     
-    /// Fill this in to draw the basic drawable
-    virtual void draw(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,Scene *scene);
-    
+    /// Indirect version of calculate encoding.  Called only when things change enough to re-encode.
+    API_AVAILABLE(ios(13.0))
+    virtual void encodeIndirectCalculate(id<MTLIndirectRenderCommand> cmdEncode,SceneRendererMTL *sceneRender,Scene *scene,RenderTargetMTL *renderTarget);
+
+    /// Indirect version of regular encoding.  Called only when things change enough to re-encode.
+    API_AVAILABLE(ios(13.0))
+    virtual void encodeIndirect(id<MTLIndirectRenderCommand> cmdEncode,SceneRendererMTL *sceneRender,Scene *scene,RenderTargetMTL *renderTarget);
+
 protected:
-    id<MTLRenderPipelineState> getRenderPipelineState(SceneRendererMTL *sceneRender,RendererFrameInfoMTL *frameInfo,BasicDrawableMTL *basicDrawMTL);
-    id<MTLRenderPipelineState> getCalcRenderPipelineState(SceneRendererMTL *sceneRender,RendererFrameInfoMTL *frameInfo);
+    // Pipeline render state for the encoder
+    id<MTLRenderPipelineState> getRenderPipelineState(SceneRendererMTL *sceneRender,Scene *scene,ProgramMTL *program,RenderTargetMTL *renderTarget,BasicDrawableMTL *basicDrawMTL);
+    
+    // Pipeline render state for the calculate encoder
+    id<MTLRenderPipelineState> getCalcRenderPipelineState(SceneRendererMTL *sceneRender,Scene *scene,ProgramMTL *program,RenderTargetMTL *renderTarget);
+    
+    // Set up the memory and defaults for the argument buffers (vertex, fragment, calculate)
+    void setupArgBuffers(id<MTLDevice> mtlDevice,RenderSetupInfoMTL *setupInfo,SceneMTL *scene,BufferBuilderMTL &buffBuild);
+
     void updateColorDefaultAttr();
     
+    bool setupForMTL;
     id<MTLRenderPipelineState> renderState;
     id<MTLRenderPipelineState> calcRenderState;
     std::vector<BasicDrawableMTL::AttributeDefault> defaultAttrs;
-    bool setupForMTL;
     WhirlyKitShader::UniformModelInstance uniMI;
-    id<MTLBuffer> instBuffer;  // Stores instances
-    id<MTLBuffer> indirectBuffer;   // Indirect arguments for drawIndexed
-    int numInst;
+    BufferEntryMTL instBuffer;       // Stores instances
+    BufferEntryMTL indirectBuffer;   // Indirect arguments for drawIndexed
+    BufferEntryMTL colorBuffer;      // Used when overriding color
+    int numInst;                        // Number of instances (if we're using that mode)
+    
+    BufferEntryMTL mainBuffer;        // We're storing all the bits and pieces in here
+    BufferEntryMTL baseMainBuffer;    // Holding reference to the BasicDrawable's buffer too
+    ArgBuffContentsMTLRef vertABInfo,fragABInfo;
+    bool vertHasTextures,fragHasTextures;
+    bool vertHasLighting,fragHasLighting;
+    ArgBuffRegularTexturesMTLRef vertTexInfo,fragTexInfo;
+
+    // Textures currently in use
+    std::vector< TextureEntryMTL > activeTextures;
 };
     
 }

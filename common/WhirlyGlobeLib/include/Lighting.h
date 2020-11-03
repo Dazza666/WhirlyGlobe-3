@@ -56,10 +56,6 @@ public:
     const Eigen::Vector4f getSpecular() { return specular; }
     void setSpecular(const Eigen::Vector4f& value){ specular = value; }
 
-    /// Bind this light (given the index) to the program.
-    /// Don't call this yourself.
-    bool bindToProgram(Program *program, int index, Eigen::Matrix4f modelMat) const;
-
 public:
     Eigen::Vector4f ambient;
     Eigen::Vector4f diffuse;
@@ -95,11 +91,7 @@ public:
     void setSpecularExponent(float value){ specularExponent = value; }
     float getSpecularExponent() { return specularExponent; }
 
-    /// Bind this material to a the given OpenGL ES program.
-    /// Don't call this yourself.
-    bool bindToProgram(Program *program);
-
-private:
+public:
     Eigen::Vector4f ambient;
     Eigen::Vector4f diffuse;
     Eigen::Vector4f specular;

@@ -61,7 +61,7 @@ public abstract class SLDSymbolizer {
         RenderControllerInterface viewC = symbolizerParams.getBaseController();
         VectorStyleSettings vectorStyleSettings = symbolizerParams.getVectorStyleSettings();
 
-        boolean useWideVectors = vectorStyleSettings.isUseWideVectors();
+        boolean useWideVectors = vectorStyleSettings.getUseWideVectors();
         BaseInfo baseInfo;
         VectorInfo vectorInfo = null;
         WideVectorInfo wideVectorInfo = null;
@@ -162,9 +162,11 @@ public abstract class SLDSymbolizer {
                 if (componentNumbers.size() > 0) {
                     int[] pattern = new int[componentNumbers.size()];
                     repeatLength = 0.0;
-                    for (Integer i : componentNumbers) {
-                        pattern[i] = i.intValue();
-                        repeatLength += (double)i.intValue();
+                    int which = 0;
+                    for (Integer ival : componentNumbers) {
+                        pattern[which] = ival.intValue();
+                        repeatLength += (double)ival.intValue();
+                        which++;
                     }
                     texBuild.setPattern(pattern);
                 } else {

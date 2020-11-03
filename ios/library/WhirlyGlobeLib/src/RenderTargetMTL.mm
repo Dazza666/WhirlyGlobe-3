@@ -25,13 +25,13 @@ namespace WhirlyKit
 {
 
 RenderTargetMTL::RenderTargetMTL()
-    : pixelFormat(MTLPixelFormatBGRA8Unorm)
+    : pixelFormat(MTLPixelFormatBGRA8Unorm), renderPassDescSetFromOutside(false)
 {
     clearOnce = true;
 }
 
 RenderTargetMTL::RenderTargetMTL(SimpleIdentity newID)
-    : RenderTarget(newID), pixelFormat(MTLPixelFormatBGRA8Unorm)
+    : RenderTarget(newID), pixelFormat(MTLPixelFormatBGRA8Unorm), renderPassDescSetFromOutside(false)
 {
     clearOnce = true;
 }
@@ -51,11 +51,11 @@ bool RenderTargetMTL::init(SceneRenderer *renderer,Scene *scene,SimpleIdentity t
 
 bool RenderTargetMTL::setTargetTexture(SceneRenderer *renderer,Scene *scene,SimpleIdentity newTargetTexID)
 {
-    TextureBase *tex = scene->getTexture(newTargetTexID);
+    TextureBaseRef tex = scene->getTexture(newTargetTexID);
     if (!tex)
         return false;
     
-    setTargetTexture(dynamic_cast<TextureBaseMTL *>(tex));
+    setTargetTexture(dynamic_cast<TextureBaseMTL *>(tex.get()));
     
     return true;
 }
@@ -64,6 +64,7 @@ void RenderTargetMTL::clear()
 {
     tex = nil;
     renderPassDesc.clear();
+    renderPassDescSetFromOutside = false;
 }
 
 int RenderTargetMTL::numLevels()
@@ -167,6 +168,9 @@ void RenderTargetMTL::setTargetDepthTexture(TextureBaseMTL *inDepthTex)
     
 void RenderTargetMTL::makeRenderPassDesc()
 {
+    if (!renderPassDesc.empty() && renderPassDescSetFromOutside)
+        return;
+    
     renderPassDesc.clear();
     
     // TODO: Only regenerate these if something has changed
@@ -217,6 +221,13 @@ void RenderTargetMTL::makeRenderPassDesc()
 MTLPixelFormat RenderTargetMTL::getPixelFormat()
 {
     return pixelFormat;
+}
+
+void RenderTargetMTL::setRenderPassDesc(MTLRenderPassDescriptor *inRenderPassDesc)
+{
+    renderPassDesc.clear();
+    renderPassDesc.push_back(inRenderPassDesc);
+    renderPassDescSetFromOutside = true;
 }
     
 MTLRenderPassDescriptor *RenderTargetMTL::getRenderPassDesc(int level)

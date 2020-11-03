@@ -40,7 +40,8 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_ComponentManager_initialise
         Scene *scene = SceneClassInfo::getClassInfo()->getObject(env, sceneObj);
         if (!scene)
             return;
-		ComponentManager *compManager = dynamic_cast<ComponentManager *>(scene->getManager(kWKComponentManager));
+		ComponentManager_Android *compManager = dynamic_cast<ComponentManager_Android *>(scene->getManager(kWKComponentManager));
+		compManager->setupJNI(env,obj);
 		ComponentManagerClassInfo::getClassInfo()->setHandle(env,obj,compManager);
 	}
 	catch (...)
@@ -59,6 +60,8 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_ComponentManager_dispose
 		ComponentManagerClassInfo *classInfo = ComponentManagerClassInfo::getClassInfo();
         {
             std::lock_guard<std::mutex> lock(disposeMutex);
+            ComponentManager_Android *compManager = classInfo->getObject(env,obj);
+            compManager->clearJNI(env);
             classInfo->clearHandle(env,obj);
         }
 	}
@@ -111,7 +114,7 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_ComponentManager_removeComponent
     try
     {
         ComponentManager *compManager = ComponentManagerClassInfo::getClassInfo()->getObject(env,obj);
-        ChangeSet *changeSet = ChangeSetClassInfo::getClassInfo()->getObject(env,changeSetObj);
+        ChangeSetRef *changeSet = ChangeSetClassInfo::getClassInfo()->getObject(env,changeSetObj);
         if (!compManager || !changeSet)
             return;
 
@@ -125,7 +128,8 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_ComponentManager_removeComponent
                 compObjIDs.insert((*compObj)->getId());
         }
 
-        compManager->removeComponentObjects(compObjIDs,*changeSet);
+        PlatformInfo_Android platformInfo(env);
+        compManager->removeComponentObjects(&platformInfo,compObjIDs,*(changeSet->get()));
     }
     catch (...)
     {
@@ -139,7 +143,7 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_ComponentManager_enableComponent
     try
     {
         ComponentManager *compManager = ComponentManagerClassInfo::getClassInfo()->getObject(env,obj);
-        ChangeSet *changeSet = ChangeSetClassInfo::getClassInfo()->getObject(env,changeSetObj);
+        ChangeSetRef *changeSet = ChangeSetClassInfo::getClassInfo()->getObject(env,changeSetObj);
         if (!compManager || !changeSet)
             return;
 
@@ -153,7 +157,7 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_ComponentManager_enableComponent
                 compObjIDs.insert((*compObj)->getId());
         }
 
-        compManager->enableComponentObjects(compObjIDs,enable,*changeSet);
+        compManager->enableComponentObjects(compObjIDs,enable,*(changeSet->get()));
     }
     catch (...)
     {

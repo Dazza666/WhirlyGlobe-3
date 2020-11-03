@@ -17,11 +17,27 @@ JNIEXPORT jboolean JNICALL Java_com_mousebird_maply_ViewState_isEqual
 
 /*
  * Class:     com_mousebird_maply_ViewState
+ * Method:    getEyePos
+ * Signature: ()Lcom/mousebird/maply/Point3d;
+ */
+JNIEXPORT jobject JNICALL Java_com_mousebird_maply_ViewState_getEyePos
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_mousebird_maply_ViewState
  * Method:    nativeInit
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_com_mousebird_maply_ViewState_nativeInit
   (JNIEnv *, jclass);
+
+/*
+ * Class:     com_mousebird_maply_ViewState
+ * Method:    dispose
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_mousebird_maply_ViewState_dispose
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

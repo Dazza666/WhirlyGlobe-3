@@ -22,6 +22,7 @@
 #import <Geometry_jni.h>
 #import <Vectors_jni.h>
 #import <Components_jni.h>
+#import <Scene_jni.h>
 #import "com_mousebird_maply_VectorTileData.h"
 
 using namespace WhirlyKit;
@@ -32,14 +33,20 @@ template<> VectorTileDataClassInfo *VectorTileDataClassInfo::classInfoObj = NULL
 JNIEXPORT void JNICALL Java_com_mousebird_maply_VectorTileData_nativeInit
 (JNIEnv *env, jclass cls)
 {
-    VectorTileDataClassInfo ::getClassInfo(env, cls);
+    VectorTileDataClassInfo::getClassInfo(env, cls);
+}
+
+JNIEXPORT jobject JNICALL MakeVectorTileDataObject(JNIEnv *env,VectorTileDataRef tileData)
+{
+    VectorTileDataClassInfo *classInfo = VectorTileDataClassInfo::getClassInfo(env,"com/mousebird/maply/VectorTileData");
+    return classInfo->makeWrapperObject(env,new VectorTileDataRef(tileData));
 }
 
 JNIEXPORT void JNICALL Java_com_mousebird_maply_VectorTileData_initialise__
 (JNIEnv *env, jobject obj)
 {
     try {
-        VectorTileData_AndroidRef *tileData = new VectorTileData_AndroidRef(new VectorTileData_Android());
+        VectorTileDataRef *tileData = new VectorTileDataRef(new VectorTileData());
         VectorTileDataClassInfo::getClassInfo()->setHandle(env,obj,tileData);
     }
     catch (...) {
@@ -58,8 +65,8 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_VectorTileData_initialise__IIILc
         Point2d *geoUR = pt2dClassInfo->getObject(env,geourobj);
         if (!boundLL || !boundUR || !geoLL || !geoUR)
             return;
-        VectorTileData_AndroidRef *tileData = new VectorTileData_AndroidRef(new VectorTileData_Android());
-        (*tileData)->ident = QuadTreeNew::Node(x,y,level);
+        VectorTileDataRef *tileData = new VectorTileDataRef(new VectorTileData());
+        (*tileData)->ident = QuadTreeIdentifier(x,y,level);
         (*tileData)->bbox.ll() = *boundLL;
         (*tileData)->bbox.ur() = *boundUR;
         (*tileData)->geoBBox.ll() = *geoLL;
@@ -82,7 +89,7 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_VectorTileData_dispose
 
         {
             std::lock_guard<std::mutex> lock(disposeMutex);
-            VectorTileData_AndroidRef *inst = classInfo->getObject(env,obj);
+            VectorTileDataRef *inst = classInfo->getObject(env,obj);
             if (!inst)
                 return;
             delete inst;
@@ -101,7 +108,7 @@ JNIEXPORT jintArray JNICALL Java_com_mousebird_maply_VectorTileData_getTileIDNat
 {
     try
     {
-        VectorTileData_AndroidRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
+        VectorTileDataRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
         if (!tileData)
             return NULL;
         std::vector<int> ints(3);
@@ -125,7 +132,7 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_VectorTileData_getBoundsNative
 {
     try
     {
-        VectorTileData_AndroidRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
+        VectorTileDataRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
         Point2dClassInfo *pt2dClassInfo = Point2dClassInfo::getClassInfo();
         Point2d *ll = pt2dClassInfo->getObject(env,llObj);
         Point2d *ur = pt2dClassInfo->getObject(env,urObj);
@@ -144,7 +151,7 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_VectorTileData_getGeoBoundsNativ
 {
     try
     {
-        VectorTileData_AndroidRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
+        VectorTileDataRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
         Point2dClassInfo *pt2dClassInfo = Point2dClassInfo::getClassInfo();
         Point2d *ll = pt2dClassInfo->getObject(env,llObj);
         Point2d *ur = pt2dClassInfo->getObject(env,urObj);
@@ -163,16 +170,21 @@ JNIEXPORT jobjectArray JNICALL Java_com_mousebird_maply_VectorTileData_getCompon
 {
     try
     {
-        VectorTileData_AndroidRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
+        VectorTileDataRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
         if (!tileData)
             return NULL;
         ComponentObjectRefClassInfo *classInfo = ComponentObjectRefClassInfo::getClassInfo();
         std::vector<jobject> compObjs;
-        for (ComponentObjectRef compObj : (*tileData)->compObjs) {
+        for (ComponentObjectRef compObj : (*tileData)->compObjs)
             compObjs.push_back(MakeComponentObjectWrapper(env,classInfo,compObj));
-        }
 
-        return BuildObjectArray(env,classInfo->getClass(),compObjs);
+        jobjectArray retArray = BuildObjectArray(env,classInfo->getClass(),compObjs);
+        for (auto objRef: compObjs) {
+            env->DeleteLocalRef(objRef);
+        }
+        compObjs.clear();
+
+        return retArray;
     }
     catch (...) {
         __android_log_print(ANDROID_LOG_VERBOSE, "Maply", "Crash in VectorTileData::getComponentObjects");
@@ -186,7 +198,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_mousebird_maply_VectorTileData_getCompon
 {
     try
     {
-        VectorTileData_AndroidRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
+        VectorTileDataRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
         if (!tileData)
             return NULL;
 
@@ -216,7 +228,7 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_VectorTileData_addComponentObjec
 {
     try
     {
-        VectorTileData_AndroidRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
+        VectorTileDataRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
         ComponentObjectRef *compObj = ComponentObjectRefClassInfo::getClassInfo()->getObject(env,compObjObj);
         if (!tileData || !compObj)
             return;
@@ -232,7 +244,7 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_VectorTileData_addComponentObjec
 {
     try
     {
-        VectorTileData_AndroidRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
+        VectorTileDataRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
         ComponentObjectRefClassInfo *classInfo = ComponentObjectRefClassInfo::getClassInfo();
         if (!tileData)
             return;
@@ -252,7 +264,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_mousebird_maply_VectorTileData_getVector
 {
     try
     {
-        VectorTileData_AndroidRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
+        VectorTileDataRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
         VectorObjectClassInfo *classInfo = VectorObjectClassInfo::getClassInfo();
         if (!tileData)
             return NULL;
@@ -264,6 +276,26 @@ JNIEXPORT jobjectArray JNICALL Java_com_mousebird_maply_VectorTileData_getVector
     }
     catch (...) {
         __android_log_print(ANDROID_LOG_VERBOSE, "Maply", "Crash in VectorTileData::getVectors");
+    }
+
+    return NULL;
+}
+
+JNIEXPORT jobject JNICALL Java_com_mousebird_maply_VectorTileData_getChangeSet
+        (JNIEnv *env, jobject obj)
+{
+    try
+    {
+        VectorTileDataRef *tileData = VectorTileDataClassInfo::getClassInfo()->getObject(env,obj);
+        VectorObjectClassInfo *classInfo = VectorObjectClassInfo::getClassInfo();
+        if (!tileData)
+            return NULL;
+        jobject newObj = MakeChangeSet(env,(*tileData)->changes);
+        (*tileData)->changes.clear();
+        return newObj;
+    }
+    catch (...) {
+        __android_log_print(ANDROID_LOG_VERBOSE, "Maply", "Crash in VectorTileData::getChangeSet");
     }
 
     return NULL;

@@ -25,8 +25,8 @@ using namespace Eigen;
 namespace WhirlyKit
 {
 
-BasicDrawableBuilderGLES::BasicDrawableBuilderGLES(const std::string &name,bool setupStandard)
-    : BasicDrawableBuilder(name), drawableGotten(false)
+BasicDrawableBuilderGLES::BasicDrawableBuilderGLES(const std::string &name,Scene *scene,bool setupStandard)
+    : BasicDrawableBuilder(name,scene), drawableGotten(false)
 {
     basicDraw = new BasicDrawableGLES(name);
     BasicDrawableBuilder::Init();
@@ -40,7 +40,7 @@ BasicDrawableBuilderGLES::~BasicDrawableBuilderGLES()
         delete basicDraw;
 }
 
-int BasicDrawableBuilderGLES::addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int numThings)
+int BasicDrawableBuilderGLES::addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int slot,int numThings)
 {
     VertexAttribute *attr = new VertexAttributeGLES(dataType,nameID);
     if (numThings > 0)

@@ -27,12 +27,12 @@ namespace WhirlyKit
 {
 
 BasicDrawableBuilder::BasicDrawableBuilder()
-    : basicDraw(NULL)
+    : basicDraw(NULL), scene(NULL)
 {
 }
     
-BasicDrawableBuilder::BasicDrawableBuilder(const std::string &name)
-    : name(name), basicDraw(NULL)
+BasicDrawableBuilder::BasicDrawableBuilder(const std::string &name,Scene *scene)
+    : name(name), basicDraw(NULL), scene(scene)
 {
 }
     
@@ -65,6 +65,8 @@ void BasicDrawableBuilder::Init()
     basicDraw->minVisibleFadeBand = basicDraw->maxVisibleFadeBand = 0.0;
     basicDraw->minViewerDist = basicDraw->maxViewerDist = DrawVisibleInvalid;
     basicDraw->viewerCenter = Point3d(DrawVisibleInvalid,DrawVisibleInvalid,DrawVisibleInvalid);
+    basicDraw->zoomSlot = -1;
+    basicDraw->minZoomVis = basicDraw->maxZoomVis = DrawVisibleInvalid;
     
     basicDraw->fadeDown = basicDraw->fadeUp = 0.0;
     basicDraw->color = RGBAColor(255,255,255,255);
@@ -83,6 +85,10 @@ void BasicDrawableBuilder::Init()
     basicDraw->hasMatrix = false;
     basicDraw->motion = false;
     basicDraw->extraFrames = 0;
+    
+    basicDraw->valuesChanged = true;
+    basicDraw->texturesChanged = true;
+    includeExp = false;
 }
     
 void BasicDrawableBuilder::setupStandardAttributes(int numReserve)
@@ -169,6 +175,13 @@ void BasicDrawableBuilder::setViewerVisibility(double inMinViewerDist,double inM
 void BasicDrawableBuilder::setVisibleRange(float minVis,float maxVis,float minVisBand,float maxVisBand)
 {
     basicDraw->minVisible = minVis;  basicDraw->maxVisible = maxVis;  basicDraw->minVisibleFadeBand = minVisBand; basicDraw->maxVisibleFadeBand = maxVisBand;
+}
+
+void BasicDrawableBuilder::setZoomInfo(int zoomSlot,double minZoomVis,double maxZoomVis)
+{
+    basicDraw->zoomSlot = zoomSlot;
+    basicDraw->minZoomVis = minZoomVis;
+    basicDraw->maxZoomVis = maxZoomVis;
 }
 
 void BasicDrawableBuilder::setAlpha(bool onOff)
@@ -261,6 +274,11 @@ void BasicDrawableBuilder::setType(GeometryType inType)
     basicDraw->type = inType;
 }
 
+void BasicDrawableBuilder::setIncludeExp(bool newVal)
+{
+    includeExp = newVal;
+}
+
 void BasicDrawableBuilder::setColor(RGBAColor color)
 {
     if (basicDraw->colorEntry >= 0)
@@ -270,6 +288,16 @@ void BasicDrawableBuilder::setColor(RGBAColor color)
 void BasicDrawableBuilder::setColor(unsigned char color[])
 {
     setColor(RGBAColor(color[0],color[1],color[2],color[3]));
+}
+
+void BasicDrawableBuilder::setColorExpression(ColorExpressionInfoRef inColorExp)
+{
+    colorExp = inColorExp;
+}
+
+void BasicDrawableBuilder::setOpacityExpression(FloatExpressionInfoRef inOpacityExp)
+{
+    opacityExp = inOpacityExp;
 }
 
 void BasicDrawableBuilder::setExtraFrames(int numFrames)
@@ -402,7 +430,7 @@ void BasicDrawableBuilder::setVertexAttributes(const SingleVertexAttributeInfoSe
 {
     for (auto it = attrs.begin();
          it != attrs.end(); ++it)
-        addAttribute(it->type,it->nameID);
+        addAttribute(it->type,it->nameID,it->slot);
 }
 
 void BasicDrawableBuilder::addVertexAttributes(const SingleVertexAttributeSet &attrs)

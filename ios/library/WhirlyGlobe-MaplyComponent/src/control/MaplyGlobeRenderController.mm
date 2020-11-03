@@ -193,7 +193,14 @@ using namespace WhirlyGlobe;
     [super loadSetup];
     
     if (renderType == SceneRenderer::RenderMetal) {
-        SceneRendererMTLRef sceneRendererMTL = SceneRendererMTLRef(new SceneRendererMTL(MTLCreateSystemDefaultDevice(),1.0));
+        id<MTLDevice> mtlDevice = MTLCreateSystemDefaultDevice();
+        NSError *err = nil;
+        id<MTLLibrary> mtlLib = [mtlDevice newDefaultLibraryWithBundle:[NSBundle bundleForClass:[MaplyRenderController class]] error:&err];
+        if (err) {
+            NSLog(@"Failed to set up default Metal library in MaplyGlobeRenderController::loadSetup.  Things will be missing.");
+        }
+        SceneRendererMTLRef sceneRendererMTL = SceneRendererMTLRef(new SceneRendererMTL(mtlDevice,mtlLib,1.0));
+        // By default we're assuming offscreen renderers are dumb splats, but we're not doing that here
         sceneRendererMTL->offscreenBlendEnable = true;
     }
 }
@@ -329,17 +336,6 @@ using namespace WhirlyGlobe;
 
     switch ([self getRenderType])
     {
-        case MaplyRenderGLES:
-        {
-            SceneRendererGLES_iOSRef sceneRenderGLES = std::dynamic_pointer_cast<SceneRendererGLES_iOS>(sceneRenderer);
-            sceneRenderGLES->addSnapshotDelegate(target);
-            
-            sceneRenderGLES->forceDrawNextFrame();
-            sceneRenderGLES->render(1/60.0);  // TODO: Set this value for reals
-            
-            sceneRenderGLES->removeSnapshotDelegate(target);
-        }
-            break;
         case MaplyRenderMetal:
         {
             SceneRendererMTLRef sceneRenderMTL = std::dynamic_pointer_cast<SceneRendererMTL>(sceneRenderer);

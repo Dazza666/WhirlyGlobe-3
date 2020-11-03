@@ -23,14 +23,14 @@
 namespace WhirlyKit
 {
     
-BillboardDrawableBuilderGLES::BillboardDrawableBuilderGLES(const std::string &name)
-: BasicDrawableBuilderGLES(name,true)
+BillboardDrawableBuilderGLES::BillboardDrawableBuilderGLES(const std::string &name,Scene *scene)
+: BasicDrawableBuilderGLES(name,scene,true)
 {
 }
     
-int BillboardDrawableBuilderGLES::addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int numThings)
+int BillboardDrawableBuilderGLES::addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int slot,int numThings)
 {
-    return BasicDrawableBuilderGLES::addAttribute(dataType, nameID, numThings);
+    return BasicDrawableBuilderGLES::addAttribute(dataType, nameID, slot, numThings);
 }
 
 BasicDrawable *BillboardDrawableBuilderGLES::getDrawable()

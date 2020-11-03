@@ -23,7 +23,8 @@
     [nav pushViewController:self.baseViewController animated:YES];
     self.globeViewController.view.backgroundColor = [UIColor blackColor];
     self.globeViewController.clearColor = [UIColor blackColor];
-    self.globeViewController.frameInterval = 2;
+//    self.globeViewController.frameInterval = 2;
+    self.globeViewController.performanceOutput = true;
     self.globeViewController.delegate = self;
     
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -47,7 +48,7 @@
     [nav pushViewController:self.baseViewController animated:YES];
     self.mapViewController.view.backgroundColor = [UIColor blackColor];
     self.mapViewController.clearColor = [UIColor blackColor];
-    self.mapViewController.frameInterval = 2;
+//    self.mapViewController.frameInterval = 2;
     
     dispatch_async(dispatch_get_main_queue(), ^{
         // setup test case specifics

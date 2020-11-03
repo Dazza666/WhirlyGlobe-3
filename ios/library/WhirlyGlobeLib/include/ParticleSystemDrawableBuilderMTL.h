@@ -28,14 +28,15 @@ namespace WhirlyKit
 class ParticleSystemDrawableBuilderMTL : public ParticleSystemDrawableBuilder
 {
 public:
-    ParticleSystemDrawableBuilderMTL(const std::string &name);
+    ParticleSystemDrawableBuilderMTL(const std::string &name,Scene *scene);
     virtual ~ParticleSystemDrawableBuilderMTL();
     
     void setup(const std::vector<SingleVertexAttributeInfo> &inVertAttrs,
                const std::vector<SingleVertexAttributeInfo> &inVaryAttrs,
-               int numTotalPoints,int batchSize,int vertexSize,bool useRectangles,bool useInstancing);
+               const std::vector<SimpleIdentity> &inVaryNames,
+               int numTotalPoints,int batchSize,int vertexSize,bool useRectangles,bool useInstancing) override;
     
-    ParticleSystemDrawable *getDrawable();
+    ParticleSystemDrawable *getDrawable() override;
     
 protected:
     bool drawableGotten;

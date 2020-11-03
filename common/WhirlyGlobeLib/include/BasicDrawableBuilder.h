@@ -26,6 +26,7 @@
 #import "GlobeView.h"
 #import "Drawable.h"
 #import "TextureAtlas.h"
+#import "BaseInfo.h"
 
 namespace WhirlyKit
 {
@@ -38,7 +39,7 @@ class BasicDrawableBuilder
 {
 public:
     /// Construct empty
-    BasicDrawableBuilder(const std::string &name);
+    BasicDrawableBuilder(const std::string &name,Scene *scene);
     virtual ~BasicDrawableBuilder();
     
     /// Reserve the given amount of space (cuts down on reallocs)
@@ -65,6 +66,9 @@ public:
     ///  the surface of the globe as at 1.0
     virtual void setVisibleRange(float minVis,float maxVis,float minVisBand=0.0,float maxVisBand=0.0);
     
+    /// Visibility based on zoom level
+    void setZoomInfo(int zoomSlot,double minZoomVis,double maxZoomVis);
+
     /// Set the alpha sorting on or off
     void setAlpha(bool onOff);
 
@@ -120,12 +124,21 @@ public:
     /// Set the color as an array.
     virtual void setColor(unsigned char inColor[]);
     
+    // Set if we're requiring the expression block for the shaders
+    void setIncludeExp(bool newVal);
+    
+    // Apply a dynamic color expression
+    void setColorExpression(ColorExpressionInfoRef colorExp);
+    
+    // Apply a dynamic opacity expression
+    void setOpacityExpression(FloatExpressionInfoRef opacityExp);
+    
     /// Number of extra frames to draw after we'd normally stop
     virtual void setExtraFrames(int numFrames);
     
     /// Add a new vertex related attribute.  Need a data type and the name the shader refers to
     ///  it by.  The index returned is how you will access it.
-    virtual int addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int numThings = -1) = 0;
+    virtual int addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int slot=-1,int numThings = -1) = 0;
     
     /// Reserve the extra space for points
     virtual void reserveNumPoints(int numPoints);
@@ -217,6 +230,7 @@ public:
     virtual void setupTexCoordEntry(int which,int numReserve);
 
 public:
+    Scene *scene;
     std::string name;
     
     // This version is only used by subclasses
@@ -233,6 +247,10 @@ public:
     // Unprocessed data arrays
     std::vector<Eigen::Vector3f> points;
     std::vector<BasicDrawable::Triangle> tris;
+
+    bool includeExp;
+    ColorExpressionInfoRef colorExp;
+    FloatExpressionInfoRef opacityExp;
 };
 
 typedef std::shared_ptr<BasicDrawableBuilder> BasicDrawableBuilderRef;

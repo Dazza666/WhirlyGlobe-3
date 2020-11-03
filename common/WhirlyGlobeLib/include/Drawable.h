@@ -50,6 +50,9 @@ public:
 typedef std::shared_ptr<DrawableTweaker> DrawableTweakerRef;
 typedef std::set<DrawableTweakerRef> DrawableTweakerRefSet;
 
+class RenderTargetContainer;
+typedef std::shared_ptr<RenderTargetContainer> RenderTargetContainerRef;
+
 /** The Drawable base class.  Inherit from this and fill in the virtual
     methods.  In general, use the BasicDrawable.
  */
@@ -91,10 +94,10 @@ public:
     
     /// Do any initialization you may want.
     /// For instance, set up VBOs.
-    virtual void setupForRenderer(const RenderSetupInfo *setupInfo) = 0;
+    virtual void setupForRenderer(const RenderSetupInfo *setupInfo,Scene *scene) = 0;
     
     /// Clean up any rendering objects you may have (e.g. VBOs).
-    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene) = 0;
+    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene,RenderTeardownInfoRef teardown) = 0;
 
     /// If present, we'll do a pre-render calculation pass with this program set
     virtual SimpleIdentity getCalculationProgram() const = 0;
@@ -104,6 +107,9 @@ public:
     
     // Which workgroups this is in (might be in multiple if there's a calculation shader)
     SimpleIDSet workGroupIDs;
+    
+    // If it's being rendered, the target container this belongs to
+    RenderTargetContainerRef renderTargetCon;
 
 protected:
     std::string name;

@@ -42,17 +42,35 @@ public:
     void addAttributeData(const RenderSetupInfo *setupInfo,const RawDataRef &data,const Batch &batch);
     
     /// Create our buffers in GL
-    virtual void setupForRenderer(const RenderSetupInfo *);
+    virtual void setupForRenderer(const RenderSetupInfo *,Scene *scene);
     
     /// Destroy GL buffers
-    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene);
+    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene,RenderTeardownInfoRef teardown);
     
-    /// Particles can calculate their positions
-    void calculate(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,Scene *scene);
+    // An all-purpose pre-render that sets up textures, uniforms and such in preparation for rendering
+    // Also adds to the list of resources being used by this drawable
+    bool preProcess(SceneRendererMTL *sceneRender,
+                    id<MTLCommandBuffer> cmdBuff,
+                    id<MTLBlitCommandEncoder> bltEncode,
+                    SceneMTL *scene);
+
+    /// List all the resources used by the drawable
+    virtual void enumerateResources(RendererFrameInfoMTL *frameInfo,ResourceRefsMTL &resources);
+
+    /// Some drawables have a pre-render phase that uses the GPU for calculation
+    virtual void encodeDirectCalculate(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,Scene *scene);
+
+    /// Draw directly, once per frame
+    virtual void encodeDirect(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,Scene *scene);
     
-    /// Called on the rendering thread to draw
-    void draw(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,Scene *scene);
-    
+    /// Indirect version of calculate encoding.  Called only when things change enough to re-encode.
+    API_AVAILABLE(ios(13.0))
+    virtual void encodeIndirectCalculate(id<MTLIndirectRenderCommand> cmdEncode,SceneRendererMTL *sceneRender,Scene *scene,RenderTargetMTL *renderTarget);
+
+    /// Indirect version of regular encoding.  Called only when things change enough to re-encode.
+    API_AVAILABLE(ios(13.0))
+    virtual void encodeIndirect(id<MTLIndirectRenderCommand> cmdEncode,SceneRendererMTL *sceneRender,Scene *scene,RenderTargetMTL *renderTarget);
+
 protected:
     id<MTLRenderPipelineState> getCalcRenderPipelineState(SceneRendererMTL *sceneRender,RendererFrameInfoMTL *frameInfo);
     id<MTLRenderPipelineState> getRenderPipelineState(SceneRendererMTL *sceneRender,RendererFrameInfoMTL *frameInfo);

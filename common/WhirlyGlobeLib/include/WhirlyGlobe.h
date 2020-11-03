@@ -51,6 +51,15 @@
 #import "LoadedTileNew.h"
 #import "LoftManager.h"
 #import "MapboxVectorTileParser.h"
+#import "MapboxVectorStyleSetC.h"
+#import "MapboxVectorStyleBackground.h"
+#import "MapboxVectorStyleCircle.h"
+#import "MapboxVectorStyleFill.h"
+#import "MapboxVectorStyleLine.h"
+#import "MapboxVectorStyleRaster.h"
+#import "MapboxVectorStyleSymbol.h"
+#import "MapboxVectorStyleSpritesImpl.h"
+#import "MaplyVectorStyleC.h"
 #import "MaplyAnimateTranslateMomentum.h"
 #import "MaplyAnimateTranslation.h"
 #import "MaplyFlatView.h"
@@ -107,6 +116,7 @@
 
 // OpenGL ES Specific includes
 
+#ifdef __ANDROID__
 #import "UtilsGLES.h"
 #import "WrapperGLES.h"
 #import "MemManagerGLES.h"
@@ -131,3 +141,5 @@
 
 #import "LineAndPointShadersGLES.h"
 #import "TriangleShadersGLES.h"
+#endif
+

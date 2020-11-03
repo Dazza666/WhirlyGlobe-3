@@ -33,10 +33,10 @@ public:
     BasicDrawableInstanceGLES(const std::string &name);
     
     /// Set up local rendering structures (e.g. VBOs)
-    virtual void setupForRenderer(const RenderSetupInfo *setupInfo);
+    virtual void setupForRenderer(const RenderSetupInfo *setupInfo,Scene *scene);
     
     /// Clean up any rendering objects you may have (e.g. VBOs).
-    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene);
+    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene,RenderTeardownInfoRef teardown);
     
     /// Some drawables have a pre-render phase that uses the GPU for calculation
     virtual void calculate(RendererFrameInfoGLES *frameInfo,Scene *scene);

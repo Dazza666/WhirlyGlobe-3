@@ -42,7 +42,6 @@ public class ComponentManager
         dispose();
     }
 
-    // TODO: Register this as it's created
     public ComponentObject makeComponentObject()
     {
         return new ComponentObject();
@@ -71,6 +70,8 @@ public class ComponentManager
         }
 
         removeComponentObjectsNative(compObjs,changes);
+        for (ComponentObject compObj : compObjs)
+            compObj.dispose();
     }
 
     /**
@@ -112,11 +113,13 @@ public class ComponentManager
                         selectionMap.remove(selectID);
                     }
                 }
+                compObjMap.remove(compObj.getID());
             }
         }
     }
 
     Map<Long, Object> selectionMap = new HashMap<Long, Object>();
+    Map<Long, ComponentObject> compObjMap = new HashMap<Long, ComponentObject>();
 
     // Add selectable objects to the list
     public void addSelectableObject(long selectID,Object selObj,ComponentObject compObj)
@@ -125,6 +128,7 @@ public class ComponentManager
         {
             compObj.addSelectID(selectID);
             selectionMap.put(selectID,selObj);
+            compObjMap.put(compObj.getID(),compObj);
         }
     }
 
@@ -149,6 +153,37 @@ public class ComponentManager
         }
 
         return selObj;
+    }
+
+    // Called by the C++ side to let us know when objects are removed by the C++ side
+    // This happens commonly with vector tiles
+    public void objectsRemoved(long objIDs[]) {
+        boolean disposeAfterRemoval = true;
+        synchronized (selectionMap) {
+            for (long objID: objIDs) {
+                ComponentObject compObj = compObjMap.get(objID);
+                if (compObj != null) {
+                    long[] selectIDs = compObj.getSelectIDs();
+                    if (selectIDs != null) {
+                        for (long selectID : selectIDs) {
+                            Object selObj = selectionMap.get(selectID);
+                            if (selObj != null) {
+                                if (disposeAfterRemoval) {
+                                    // Note: We should fix this for the other object types
+                                    if (selObj.getClass() == VectorObject.class) {
+                                        VectorObject vecObj = (VectorObject) selObj;
+                                        vecObj.dispose();
+                                    }
+                                }
+                                selectionMap.remove(selectID);
+                            }
+                        }
+                    }
+
+                    compObjMap.remove(objID);
+                }
+            }
+        }
     }
 
     static

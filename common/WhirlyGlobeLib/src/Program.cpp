@@ -25,7 +25,7 @@
 namespace WhirlyKit
 {
 
-Program::Program() : reduceMode(None)
+Program::Program() : reduceMode(None), changed(true)
 {
 }
 
@@ -41,6 +41,7 @@ const std::string &Program::getName()
 void Program::setReduceMode(ReduceMode inReduceMode)
 {
     reduceMode = inReduceMode;
+    changed = true;
 }
 
 Program::ReduceMode Program::getReduceMode()
@@ -50,13 +51,15 @@ Program::ReduceMode Program::getReduceMode()
 
 void Program::setUniBlock(const BasicDrawable::UniformBlock &uniBlock)
 {
+    changed = true;
+
     for (int ii=0;ii<uniBlocks.size();ii++)
         if (uniBlocks[ii].bufferID == uniBlock.bufferID) {
             uniBlocks[ii] = uniBlock;
             return;
         }
     
-    uniBlocks.push_back(uniBlock);
+    uniBlocks.push_back(uniBlock);    
 }
     
 ShaderAddTextureReq::ShaderAddTextureReq(SimpleIdentity shaderID,SimpleIdentity nameID,SimpleIdentity texID,int textureSlot)
@@ -67,11 +70,23 @@ ShaderAddTextureReq::ShaderAddTextureReq(SimpleIdentity shaderID,SimpleIdentity 
 void ShaderAddTextureReq::execute(Scene *scene, SceneRenderer *renderer, View *view)
 {
     Program *prog = scene->getProgram(shaderID);
-    TextureBase *tex = scene->getTexture(texID);
+    TextureBaseRef tex = scene->getTexture(texID);
     if (prog && tex)
     {
-        prog->setTexture(nameID,tex,textureSlot);
+        prog->setTexture(nameID,tex.get(),textureSlot);
     }
+}
+
+ShaderRemTextureReq::ShaderRemTextureReq(SimpleIdentity shaderID,SimpleIdentity texID)
+: shaderID(shaderID), texID(texID)
+{
+}
+
+void ShaderRemTextureReq::execute(Scene *scene,SceneRenderer *renderer,WhirlyKit::View *view)
+{
+    Program *prog = scene->getProgram(shaderID);
+    if (prog)
+        prog->clearTexture(texID);
 }
 
 ProgramUniformBlockSetRequest::ProgramUniformBlockSetRequest(SimpleIdentity inProgID,const RawDataRef &uniData,int bufferID)

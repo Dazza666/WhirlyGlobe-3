@@ -40,7 +40,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     
     /// Construct empty
-    BasicDrawableInstanceBuilder(const std::string &name);
+    BasicDrawableInstanceBuilder(const std::string &name,Scene *scene);
     virtual ~BasicDrawableInstanceBuilder();
     
     /// Set the base draw ID and type
@@ -62,6 +62,9 @@ public:
     /// The units are in distance from the center of the globe and
     ///  the surface of the globe as at 1.0
     virtual void setVisibleRange(float minVis,float maxVis);
+    
+    /// Visibility based on zoom level
+    void setZoomInfo(int zoomSlot,double minZoomVis,double maxZoomVis);
         
     /// Draw priority used for sorting
     virtual void setDrawPriority(unsigned int newPriority);
@@ -131,6 +134,7 @@ protected:
     // Called by subclasses
     void Init();
     
+    Scene *scene;
     BasicDrawableInstance *drawInst;
 };
     

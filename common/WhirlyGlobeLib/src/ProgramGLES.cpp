@@ -120,6 +120,11 @@ bool ProgramGLES::setTexture(StringIdentity nameID,TextureBase *inTex,int textur
 }
 
 
+void ProgramGLES::clearTexture(SimpleIdentity texID)
+{
+    // Note: Doesn't do anything
+}
+
 bool ProgramGLES::setUniform(StringIdentity nameID,const Eigen::Vector2f &vec)
 {
     OpenGLESUniform *uni = findUniform(nameID);
@@ -402,7 +407,7 @@ ProgramGLES::ProgramGLES(const std::string &inName,const std::string &vShaderStr
     CheckGLError("ProgramGLES: glGetActiveAttrib");
 }
     
-void ProgramGLES::teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene)
+void ProgramGLES::teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene,RenderTeardownInfoRef teardown)
 {
     cleanUp();
 }
@@ -473,7 +478,15 @@ bool ProgramGLES::setLights(const std::vector<DirectionalLight> &lights, TimeInt
     for (unsigned int ii=0;ii<numLights;ii++)
     {
         const DirectionalLight &light = lights[ii];
-        lightsSet &= light.bindToProgram(this, ii, modelMat);
+        Eigen::Vector3f dir = light.pos.normalized();
+        Eigen::Vector3f halfPlane = (dir + Eigen::Vector3f(0,0,1)).normalized();
+
+        setUniform(lightViewDependNameIDs[ii], (light.viewDependent ? 0.0f : 1.0f));
+        setUniform(lightDirectionNameIDs[ii], dir);
+        setUniform(lightHalfplaneNameIDs[ii], halfPlane);
+        setUniform(lightAmbientNameIDs[ii], light.ambient);
+        setUniform(lightDiffuseNameIDs[ii], light.diffuse);
+        setUniform(lightSpecularNameIDs[ii], light.specular);
     }
     OpenGLESUniform *lightAttr = findUniform(u_numLightsNameID);
     if (lightAttr)
@@ -482,8 +495,11 @@ bool ProgramGLES::setLights(const std::vector<DirectionalLight> &lights, TimeInt
         return false;
     
     // Bind the material
-    mat->bindToProgram(this);
-    
+    setUniform(materialAmbientNameID, mat->ambient);
+    setUniform(materialDiffuseNameID, mat->diffuse);
+    setUniform(materialSpecularNameID, mat->specular);
+    setUniform(materialSpecularExponentNameID, mat->specularExponent);
+
     return lightsSet;
 }
 

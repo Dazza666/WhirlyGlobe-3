@@ -93,6 +93,9 @@ public:
     /// Set the viewer based visibility
     void setViewerVisibility(double inMinViewerDist,double inMaxViewerDist,const Point3d &inViewerCenter);
     
+    /// Visibility based on zoom level
+    void setZoomInfo(int zoomSlot,double minZoomVis,double maxZoomVis);
+    
     /// Set the color
     virtual void setColor(RGBAColor inColor);
     
@@ -163,6 +166,10 @@ public:
     virtual void setTexRelative(int which,int size,int borderTexel,int relLevel,int relX,int relY);
     
 protected:
+    /// Update rendering for this drawable
+    virtual void setValuesChanged();
+    virtual void setTexturesChanged();
+
     Style instanceStyle;
     SimpleIdentity programID;
     bool requestZBuffer,writeZBuffer;
@@ -179,6 +186,8 @@ protected:
     float minVis;
     float maxVis;
     double minViewerDist,maxViewerDist;
+    int zoomSlot;
+    double minZoomVis,maxZoomVis;
     Point3d viewerCenter;
     int numInstances;
     
@@ -197,6 +206,11 @@ protected:
     // Or we might get the number of instances from a texture (possibly a reduce)
     SimpleIdentity instanceTexSource;
     SimpleIdentity instanceTexProg;
+    
+    // Set if we changed one of the general values (presumably during execution)
+    bool valuesChanged;
+    // Set if the textures changed
+    bool texturesChanged;
 };
 
 /// Reference counted version of BasicDrawableInstance

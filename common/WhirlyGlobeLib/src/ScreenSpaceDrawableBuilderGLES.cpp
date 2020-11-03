@@ -25,7 +25,7 @@ namespace WhirlyKit
     
 void ScreenSpaceTweakerGLES::tweakForFrame(Drawable *inDraw,RendererFrameInfo *frameInfo)
 {
-    if (frameInfo->sceneRenderer->getType() != SceneRenderer::RenderGLES || !frameInfo->program)
+    if (!frameInfo->program)
         return;
     
     BasicDrawable *draw = dynamic_cast<BasicDrawable *>(inDraw);
@@ -38,14 +38,14 @@ void ScreenSpaceTweakerGLES::tweakForFrame(Drawable *inDraw,RendererFrameInfo *f
     programGLES->setUniform(u_activerotNameID, (activeRot ? 1 : 0));
 }
 
-ScreenSpaceDrawableBuilderGLES::ScreenSpaceDrawableBuilderGLES(const std::string &name)
-    : BasicDrawableBuilderGLES(name,true)
+ScreenSpaceDrawableBuilderGLES::ScreenSpaceDrawableBuilderGLES(const std::string &name,Scene *scene)
+    : BasicDrawableBuilderGLES(name,scene,true)
 {
 }
     
-int ScreenSpaceDrawableBuilderGLES::addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int numThings)
+int ScreenSpaceDrawableBuilderGLES::addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int slot,int numThings)
 {
-    return BasicDrawableBuilderGLES::addAttribute(dataType, nameID, numThings);
+    return BasicDrawableBuilderGLES::addAttribute(dataType, nameID, slot, numThings);
 }
     
 ScreenSpaceTweaker *ScreenSpaceDrawableBuilderGLES::makeTweaker()

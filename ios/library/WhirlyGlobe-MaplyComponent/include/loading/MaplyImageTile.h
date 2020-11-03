@@ -58,6 +58,21 @@
  */
 - (instancetype)initWithRawImage:(NSData *)data width:(int)width height:(int)height components:(int)comp viewC:(NSObject<MaplyRenderControllerProtocol> *)viewC;
 
+/**
+Initialize with an NSData object containing pixels of a given format.
+
+This sets up the tile with an NSData object containing raw pixels.  The pixels are defined by the format.
+
+@param data The NSData object containing pixels.
+ 
+@param format The image format the data is already in.
+
+@param width The width of the raw image contained in the data object.
+
+@param height The height of the raw image contained in the data object.
+*/
+- (instancetype)initWithRawImage:(NSData *)data format:(MaplyQuadImageFormat)format width:(int)width height:(int)height viewC:(NSObject<MaplyRenderControllerProtocol> *)viewC;
+
 /** 
     Initialize with a single UIImage for the tile.
     
@@ -69,8 +84,6 @@
     Initialize with an NSData object containing PNG or JPEG data that can be interpreted by UIImage.
     
     We're expecting PNG, JPEG or another self identified format (e.g. PKM).  These we can interpret ourselves.
-
-    @param borderSize If the image already contains a border, let the ImageTile no.  Pass in 0 if it doesn't.
  */
 - (instancetype)initWithPNGorJPEGData:(NSData *)data viewC:(NSObject<MaplyRenderControllerProtocol> *)viewC;
 

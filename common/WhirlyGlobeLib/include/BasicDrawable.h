@@ -45,7 +45,16 @@ class BasicDrawable : virtual public Drawable
 friend class BasicDrawableInstance;
 friend class BasicDrawableInstanceBuilder;
 friend class BasicDrawableBuilder;
-
+friend class WideVectorDrawableBuilder;
+friend class WideVectorDrawableBuilderMTL;
+friend class ShapeManager;
+friend class ScreenSpaceDrawableBuilderMTL;
+friend class BasicDrawableInstanceGLES;
+friend class BasicDrawableInstanceMTL;
+friend class BillboardDrawableBuilderMTL;
+friend class BasicDrawableBuilderGLES;
+friend class BasicDrawableBuilderMTL;
+    
 public:
     /// Simple triangle.  Can obviously only have 2^16 vertices
     class Triangle
@@ -83,6 +92,9 @@ public:
     
     /// Set the viewer based visibility
     virtual void setViewerVisibility(double minViewerDist,double maxViewerDist,const Point3d &viewerCenter);
+    
+    /// Visibility based on zoom level
+    void setZoomInfo(int zoomSlot,double minZoomVis,double maxZoomVis);
 
     /// Set what range we can see this drawable within.
     /// The units are in distance from the center of the globe and
@@ -160,7 +172,7 @@ public:
     class UniformBlock
     {
     public:
-        int bufferID;
+        int bufferID;  // Actually an index into a shared shader structure, not a buffer
         RawDataRef blockData;
     };
 
@@ -175,12 +187,16 @@ public:
         
     /// If present, we'll do a pre-render calculation pass with this program set
     virtual SimpleIdentity getCalculationProgram() const;
-        
+            
     /// For OpenGLES2, this is the program to use to render this drawable.
     virtual SimpleIdentity getProgram() const;
     void setProgram(SimpleIdentity progId);
     
 public:
+    /// Update rendering for this drawable
+    virtual void setValuesChanged();
+    virtual void setTexturesChanged();
+
     GeometryType type;
     bool on;  // If set, draw.  If not, not
     TimeInterval startEnable,endEnable;
@@ -188,6 +204,8 @@ public:
     float minVisible,maxVisible;
     float minVisibleFadeBand,maxVisibleFadeBand;
     double minViewerDist,maxViewerDist;
+    int zoomSlot;
+    double minZoomVis,maxZoomVis;
     Point3d viewerCenter;
     unsigned int drawPriority;  // Used to sort drawables
     float drawOffset;    // Number of units of Z buffer resolution to offset upward (by the normal)
@@ -226,6 +244,11 @@ public:
         
     // If set the geometry is already in OpenGL clip coordinates, so no transform
     bool clipCoords;
+    
+    // Set if we changed one of the general values (presumably during execution)
+    bool valuesChanged;
+    // Set if the textures changed
+    bool texturesChanged;
 };
 
 /** Drawable Tweaker that cycles through textures.

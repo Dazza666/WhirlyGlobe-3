@@ -37,6 +37,29 @@ using namespace WhirlyKit;
 
 namespace WhirlyKit
 {
+
+WorkGroupGLES::WorkGroupGLES(GroupType inGroupType)
+{
+    groupType = inGroupType;
+    
+    switch (groupType) {
+        case Calculation:
+            // For calculation we don't really have a render target
+            renderTargetContainers.push_back(WorkGroupGLES::makeRenderTargetContainer(NULL));
+            break;
+        case Offscreen:
+            break;
+        case ReduceOps:
+            break;
+        case ScreenRender:
+            break;
+    }
+}
+
+RenderTargetContainerRef WorkGroupGLES::makeRenderTargetContainer(RenderTargetRef renderTarget)
+{
+    return RenderTargetContainerRef(new RenderTargetContainerGLES(renderTarget));
+}
     
 RendererFrameInfoGLES::RendererFrameInfoGLES()
 : glesVersion(0)
@@ -46,7 +69,16 @@ RendererFrameInfoGLES::RendererFrameInfoGLES()
 SceneRendererGLES::SceneRendererGLES()
 {
     init();
-    extraFrameMode = false;
+
+    // Calculation shaders
+    workGroups.push_back(WorkGroupRef(new WorkGroupGLES(WorkGroup::Calculation)));
+    // Offscreen target render group
+    workGroups.push_back(WorkGroupRef(new WorkGroupGLES(WorkGroup::Offscreen)));
+    // Middle one for weird stuff
+    workGroups.push_back(WorkGroupRef(new WorkGroupGLES(WorkGroup::ReduceOps)));
+    // Last workgroup is used for on screen rendering
+    workGroups.push_back(WorkGroupRef(new WorkGroupGLES(WorkGroup::ScreenRender)));
+
     extraFrameMode = false;
 }
     
@@ -109,6 +141,9 @@ bool SceneRendererGLES::setup(int apiVersion,int sizeX,int sizeY,float inScale)
     }
     defaultTarget->clearEveryFrame = true;
     renderTargets.push_back(defaultTarget);
+
+    // GL doesn't do anything special for teardown
+    teardownInfo = RenderTeardownInfoRef(new RenderTeardownInfo());
     
     return true;
 }
@@ -355,18 +390,19 @@ void SceneRendererGLES::render(TimeInterval duration)
         
         // Let the active models to their thing
         // That thing had better not take too long
-        for (auto activeModel : scene->activeModels) {
+        auto activeModels = scene->getActiveModels();
+        for (auto activeModel : activeModels) {
             activeModel->updateForFrame(&baseFrameInfo);
             // Note: We were setting the GL context here.  Do we need to?
         }
         if (perfInterval > 0)
-            perfTimer.addCount("Active Models", (int)scene->activeModels.size());
+            perfTimer.addCount("Active Models", (int)activeModels.size());
         
         if (perfInterval > 0)
             perfTimer.stopTiming("Active Model Runs");
         
         if (perfInterval > 0)
-            perfTimer.addCount("Scene changes", (int)scene->changeRequests.size());
+            perfTimer.addCount("Scene changes", scene->getNumChangeRequests());
         
         if (perfInterval > 0)
             perfTimer.startTiming("Scene processing");
@@ -416,11 +452,11 @@ void SceneRendererGLES::render(TimeInterval duration)
             Matrix4f pvMat4f = Matrix4dToMatrix4f(pvMat);
             offFrameInfo.pvMat = pvMat4f;
             offFrameInfo.pvMat4d = pvMat;
-            
-            const DrawableRefSet &rawDrawables = scene->getDrawables();
-            for (auto it : rawDrawables)
+
+            auto rawDrawables = scene->getDrawables();
+            for (auto draw : rawDrawables)
             {
-                DrawableGLESRef theDrawable = std::dynamic_pointer_cast<DrawableGLES>(it.second);
+                DrawableGLES *theDrawable = dynamic_cast<DrawableGLES *>(draw);
                 if (theDrawable->isOn(&offFrameInfo))
                 {
                     const Matrix4d *localMat = theDrawable->getMatrix();
@@ -429,9 +465,9 @@ void SceneRendererGLES::render(TimeInterval duration)
                         Eigen::Matrix4d newMvpMat = thisMvpMat * (*localMat);
                         Eigen::Matrix4d newMvMat = modelAndViewMat4d * (*localMat);
                         Eigen::Matrix4d newMvNormalMat = newMvMat.inverse().transpose();
-                        drawList.push_back(DrawableContainer(theDrawable.get(),newMvpMat,newMvMat,newMvNormalMat));
+                        drawList.push_back(DrawableContainer(theDrawable,newMvpMat,newMvMat,newMvNormalMat));
                     } else
-                        drawList.push_back(DrawableContainer(theDrawable.get(),thisMvpMat,modelAndViewMat4d,modelAndViewNormalMat4d));
+                        drawList.push_back(DrawableContainer(theDrawable,thisMvpMat,modelAndViewMat4d,modelAndViewNormalMat4d));
                 }
             }
         }
@@ -548,8 +584,10 @@ void SceneRendererGLES::render(TimeInterval duration)
                 
                 // Figure out the program to use for drawing
                 SimpleIdentity drawProgramId = drawContain.drawable->getProgram();
-                if (drawProgramId == EmptyIdentity)
-                    drawProgramId = 3;
+                if (drawProgramId == EmptyIdentity) {
+                    wkLogLevel(Error, "Drawable missing program ID.  Skipping.");
+                    continue;
+                }
                 if (drawProgramId != curProgramId)
                 {
                     curProgramId = drawProgramId;
@@ -565,9 +603,12 @@ void SceneRendererGLES::render(TimeInterval duration)
                         program->setUniform(u_numLightsNameID, (int)lights.size());
                         
                         baseFrameInfo.program = program;
+                    } else {
+                        wkLogLevel(Error, "Missing OpenGL ES Program.");
+                        continue;
                     }
                 }
-                if (drawProgramId == EmptyIdentity)
+                if (drawProgramId == EmptyIdentity || !baseFrameInfo.program)
                     continue;
                 
                 // Only draw drawables that are active for the current render target
@@ -646,34 +687,50 @@ void SceneRendererGLES::render(TimeInterval duration)
     }
 }
 
+RawDataRef SceneRendererGLES::getSnapshotAt(SimpleIdentity renderTargetID, int x, int y, int width, int height)
+{
+    for (auto renderTarget: renderTargets) {
+        if (renderTarget->getId() == renderTargetID) {
+            if (width <= 0 || height <= 0) {
+                return renderTarget->snapshot();
+            } else {
+                return renderTarget->snapshot(x,y,width,height);
+            }
+        }
+    }
+
+    return RawDataRef();
+}
+
+
 BasicDrawableBuilderRef SceneRendererGLES::makeBasicDrawableBuilder(const std::string &name) const
 {
-    return BasicDrawableBuilderRef(new BasicDrawableBuilderGLES(name));
+    return BasicDrawableBuilderRef(new BasicDrawableBuilderGLES(name,scene));
 }
 
 BasicDrawableInstanceBuilderRef SceneRendererGLES::makeBasicDrawableInstanceBuilder(const std::string &name) const
 {
-    return BasicDrawableInstanceBuilderRef(new BasicDrawableInstanceBuilderGLES(name));
+    return BasicDrawableInstanceBuilderRef(new BasicDrawableInstanceBuilderGLES(name,scene));
 }
 
 BillboardDrawableBuilderRef SceneRendererGLES::makeBillboardDrawableBuilder(const std::string &name) const
 {
-    return BillboardDrawableBuilderRef(new BillboardDrawableBuilderGLES(name));
+    return BillboardDrawableBuilderRef(new BillboardDrawableBuilderGLES(name,scene));
 }
 
 ScreenSpaceDrawableBuilderRef SceneRendererGLES::makeScreenSpaceDrawableBuilder(const std::string &name) const
 {
-    return ScreenSpaceDrawableBuilderRef(new ScreenSpaceDrawableBuilderGLES(name));
+    return ScreenSpaceDrawableBuilderRef(new ScreenSpaceDrawableBuilderGLES(name,scene));
 }
 
 ParticleSystemDrawableBuilderRef  SceneRendererGLES::makeParticleSystemDrawableBuilder(const std::string &name) const
 {
-    return ParticleSystemDrawableBuilderRef(new ParticleSystemDrawableBuilderGLES(name));
+    return ParticleSystemDrawableBuilderRef(new ParticleSystemDrawableBuilderGLES(name,scene));
 }
 
 WideVectorDrawableBuilderRef SceneRendererGLES::makeWideVectorDrawableBuilder(const std::string &name) const
 {
-    return WideVectorDrawableBuilderRef(new WideVectorDrawableBuilderGLES(name));
+    return WideVectorDrawableBuilderRef(new WideVectorDrawableBuilderGLES(name,scene));
 }
 
 RenderTargetRef SceneRendererGLES::makeRenderTarget() const

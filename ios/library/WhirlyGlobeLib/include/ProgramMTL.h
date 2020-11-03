@@ -41,10 +41,10 @@ public:
     ProgramMTL(const std::string &name,id<MTLFunction> vertfunc,id<MTLFunction> fragFunc);
     
     /// Return true if it was built correctly
-    bool isValid();
+    bool isValid() override;
     
     /// Check for the specific attribute associated with WhirlyKit lights
-    bool hasLights();
+    bool hasLights() override;
     
     /// Set the attributes associated with lighting.
     /// We'll check their last updated time against ours.
@@ -52,18 +52,17 @@ public:
     
     /// Tie a given texture ID to the given slot in the renderer
     /// We have to set these up each time before drawing
-    virtual bool setTexture(StringIdentity nameID,TextureBase *tex,int textureSlot);
+    virtual bool setTexture(StringIdentity nameID,TextureBase *tex,int textureSlot) override;
+    
+    /// Remove the corresponding texture entries
+    virtual void clearTexture(SimpleIdentity texID) override;
     
     /// Return the name (for tracking purposes)
     const std::string &getName();
     
-    /// Clean up OpenGL resources, rather than letting the destructor do it (which it will)
-    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene);
-    void cleanUp();
-    
-    /// Add any external resources the program might need to the encoder
-    void addResources(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,SceneMTL *scene);
-    
+    /// Clean up Metal resources, rather than letting the destructor do it (which it will)
+    virtual void teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene,RenderTeardownInfoRef teardown) override;
+        
 public:
     bool valid;
     id<MTLFunction> vertFunc,fragFunc;
@@ -75,7 +74,8 @@ public:
         TextureEntry();
         
         int slot;
-        id<MTLTexture> tex;
+        TextureEntryMTL texBuf;
+        SimpleIdentity texID;
     } ;
     std::vector<TextureEntry> textures;
 };

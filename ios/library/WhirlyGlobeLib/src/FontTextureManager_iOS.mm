@@ -21,12 +21,12 @@
 #import <UIKit/UIKit.h>
 #import <CoreText/CoreText.h>
 #import "FontTextureManager_iOS.h"
-#import "TextureGLES_iOS.h"
 #import "TextureMTL.h"
 #import "UIColor+Stuff.h"
 #import "Scene.h"
 #import "SceneRenderer.h"
 #import "RawData_NSData.h"
+#import "UIImage+Stuff.h"
 
 // We scale the fonts up so they look better sampled down.
 static const float BogusFontScale = 2.0;
@@ -171,17 +171,19 @@ NSData *FontTextureManager_iOS::renderGlyph(CGGlyph glyph,FontManager_iOSRef fm,
     //    CGContextAddLineToPoint(theContext, width, -baselineOffY+textureOffset.y);
     //    CGContextStrokePath(theContext);
 
-    //    UIImage *theImage = [UIImage imageWithRawData:retData width:width height:height];
-    //    if (theImage)
-    //    {
-    //        NSData *imageData = UIImagePNGRepresentation(theImage);
-    //        if (imageData)
-    //        {
-    //            NSArray *myPathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    //            NSString *myPath    = [myPathList  objectAtIndex:0];
-    //            [imageData writeToFile:[NSString stringWithFormat:@"%@/%d.png",myPath,glyph] atomically:YES];
-    //        }
-    //    }
+//        UIImage *theImage = [UIImage imageWithRawData:retData width:width height:height];
+//        if (theImage)
+//        {
+//            NSData *imageData = UIImagePNGRepresentation(theImage);
+//            if (imageData)
+//            {
+//                NSArray *myPathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+//                NSString *myPath    = [myPathList  objectAtIndex:0];
+//                NSString *path = [NSString stringWithFormat:@"%@/%d.png",myPath,glyph];
+//                [imageData writeToFile:path atomically:YES];
+//                NSLog(@"Glyph: %@",path);
+//            }
+//        }
 
     CGContextRelease(theContext);
 
@@ -191,7 +193,7 @@ NSData *FontTextureManager_iOS::renderGlyph(CGGlyph glyph,FontManager_iOSRef fm,
 }
 
 /// Add the given string.  Caller is responsible for deleting the DrawableString
-WhirlyKit::DrawableString *FontTextureManager_iOS::addString(NSAttributedString *str,ChangeSet &changes)
+WhirlyKit::DrawableString *FontTextureManager_iOS::addString(PlatformThreadInfo *threadInfo,NSAttributedString *str,ChangeSet &changes)
 {
     // We could make this more granular
     std::lock_guard<std::mutex> guardLock(lock);
@@ -268,16 +270,10 @@ WhirlyKit::DrawableString *FontTextureManager_iOS::addString(NSAttributedString 
                     if (glyphImage)
                     {
                         Texture *tex = nil;
-                        if (sceneRender->getType() == SceneRenderer::RenderGLES) {
-                            tex = new TextureGLES_iOS("Font Texture Manager",glyphImage,false);
-                            tex->setWidth(texSize.x());
-                            tex->setHeight(texSize.y());
-                        } else {
-                            RawDataRef glyphImageWrap(new RawNSDataReader(glyphImage));
-                            tex = new TextureMTL("Font Texture Manager",glyphImageWrap,false);
-                            tex->setWidth(texSize.x());
-                            tex->setHeight(texSize.y());
-                        }
+                        RawDataRef glyphImageWrap(new RawNSDataReader(glyphImage));
+                        tex = new TextureMTL("Font Texture Manager",glyphImageWrap,false);
+                        tex->setWidth(texSize.x());
+                        tex->setHeight(texSize.y());
                         SubTexture subTex;
                         Point2f realSize(glyphSize.x()+2*textureOffset.x(),glyphSize.y()+2*textureOffset.y());
                         std::vector<Texture *> texs;

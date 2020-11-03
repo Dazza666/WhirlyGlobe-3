@@ -46,6 +46,19 @@ public:
     int glesVersion;
 };
 
+class WorkGroupGLES : public WorkGroup
+{
+public:
+    WorkGroupGLES(GroupType groupType);
+    virtual RenderTargetContainerRef makeRenderTargetContainer(RenderTargetRef);
+};
+
+class RenderTargetContainerGLES : public RenderTargetContainer
+{
+public:
+    RenderTargetContainerGLES(RenderTargetRef renderTarget) : RenderTargetContainer(renderTarget) { }
+};
+
 /// Base class for the scene renderer.
 /// It's subclassed for the specific version of OpenGL ES
 class SceneRendererGLES : public SceneRenderer
@@ -103,6 +116,12 @@ public:
     
     /// Construct a renderer-specific dynamic texture
     virtual DynamicTextureRef makeDynamicTexture(const std::string &name) const;
+
+    /** Return the snapshot for the given render target.
+     *  EmptyIdentity refers to the whole
+     *  width <= 0 means the whole screen.
+     */
+    virtual RawDataRef getSnapshotAt(SimpleIdentity renderTargetID, int x, int y, int width, int height);
     
 public:
     // Possible post-target creation init

@@ -55,14 +55,16 @@ public:
     
     // Clean up references to make things happier
     void clear() {
-//        request = nil;
-//        fetchInfo = nil;
-//        task = nil;
+        request = nil;
+        fetchInfo = nil;
+        task = nil;
     }
 
     // We're either loading it or going to load it eventually
     typedef enum {ToLoad,Loading} State;
     State state;
+    
+    MaplyTileID tileID;
     
     // Set if we know the tile is cached
     bool isLocal;
@@ -390,6 +392,10 @@ using namespace WhirlyKit;
 {
     bool active;
     NSString *name;
+    
+    NSObject<MaplyTileLocalStorage> __weak *localStorage;
+    NSObject<MaplyTileSecondChance> __weak *secondChance;
+
     NSURLSession *session;
     dispatch_queue_t queue;
     
@@ -417,6 +423,16 @@ using namespace WhirlyKit;
     recentStats = [[MaplyRemoteTileFetcherStats alloc] initWithFetcher:self];
             
     return self;
+}
+
+- (void)setLocalStorage:(NSObject<MaplyTileLocalStorage> * __nonnull)inLocalStorage
+{
+    localStorage = inLocalStorage;
+}
+
+- (void)setSecondChance:(NSObject<MaplyTileSecondChance> * __nonnull)inSecondChance
+{
+    secondChance = inSecondChance;
 }
 
 /// Return the fetching stats since the beginning or since the last reset
@@ -521,6 +537,7 @@ using namespace WhirlyKit;
     for (MaplyTileFetchRequest *request in requests) {
         // Set up new request
         TileInfoRef tile(new TileInfo());
+        tile->tileID = request.tileID;
         tile->tileSource = request.tileSource;
         tile->importance = request.importance;
         tile->priority = request.priority;
@@ -697,14 +714,28 @@ using namespace WhirlyKit;
                                  });
                         }];
         
-        // Look for it cached
-        if ([self isTileLocal:tile fileName:tile->fetchInfo.cacheFile]) {
-            // Do the reading somewhere else
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                [weakSelf handleCache:tile];
-            });
-        } else {
-            [tile->task resume];
+        // Look for it in local storage first
+        bool inLocalStorage = false;
+        if (localStorage) {
+            NSData *data = [localStorage dataForTile:tile->fetchInfo tileID:tile->tileID];
+            if (data) {
+                inLocalStorage = true;
+                
+                [self finishedLoading:tile data:data error:nil];
+            }
+        }
+        
+        // Next up, deal with local tile or remote tile fetching
+        if (!inLocalStorage) {
+            // Look for it cached
+            if ([self isTileLocal:tile fileName:tile->fetchInfo.cacheFile]) {
+                // Do the reading somewhere else
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    [weakSelf handleCache:tile];
+                });
+            } else {
+                [tile->task resume];
+            }
         }
     }
 
@@ -719,21 +750,30 @@ using namespace WhirlyKit;
 
 - (void)handleData:(NSData *)data response:(NSHTTPURLResponse *)response error:(NSError *)error tile:(TileInfoRef)tile fetchStart:(TimeInterval)fetchStartTile
 {
-   if (error || response.statusCode != 200) {
+    bool success = true;
+    bool useCache = true;
+    
+    // 204 means no content, which is just empty data for most cases
+    if (error || (response.statusCode != 200 && response.statusCode != 204)) {
        // Cancels don't count as errors
        if (!error || error.code != NSURLErrorCancelled) {
-           allStats.totalFails = allStats.totalFails + 1;
-           recentStats.totalFails = recentStats.totalFails + 1;
-           // Build an NSError around the status code
-           if (!error) {
-               error = [[NSError alloc] initWithDomain:@"MaplyRemoteTileFetcher"
-                                                  code:response.statusCode
-                                              userInfo:@{NSLocalizedDescriptionKey:[NSString stringWithFormat:@"Server response: %d",(int)response.statusCode]}];
+           success = false;
+           
+           // The dev has one more chance to provide the data before we give up
+           if (secondChance) {
+               data = [secondChance dataForTile:tile->fetchInfo tileID:tile->tileID];
+               if (data) {
+                   success = true;
+                   useCache = false;
+               }
            }
-           [self finishedLoading:tile data:nil error:error];
+       } else {
+           // We do nothing for a cancel
+           return;
        }
-   } else {
-       
+    }
+    
+    if (success) {
        int length = [data length];
 
        if (_debugMode)
@@ -749,8 +789,21 @@ using namespace WhirlyKit;
        allStats.totalLatency = allStats.totalLatency + howLong;
        recentStats.totalLatency = recentStats.totalLatency + howLong;
        [self finishedLoading:tile data:data error:error];
-       [self writeToCache:tile tileData:data];
-   }
+       if (useCache)
+           [self writeToCache:tile tileData:data];
+    } else {
+        // Failed.  Sad.  :-{
+        allStats.totalFails = allStats.totalFails + 1;
+        recentStats.totalFails = recentStats.totalFails + 1;
+        // Build an NSError around the status code
+        if (!error) {
+            error = [[NSError alloc] initWithDomain:@"MaplyRemoteTileFetcher"
+                                               code:response.statusCode
+                                           userInfo:@{NSLocalizedDescriptionKey:[NSString stringWithFormat:@"Server response: %d",(int)response.statusCode]}];
+        }
+
+        [self finishedLoading:tile data:nil error:error];
+    }
 }
 
 - (void)handleCache:(TileInfoRef)tile
@@ -821,7 +874,7 @@ using namespace WhirlyKit;
             return;
         
         // We assume the parsing is going to take some time
-        if (data) {
+        if (!error) {
             if (tile->request)
                 tile->request.success(tile->request,data);
         } else {

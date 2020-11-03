@@ -64,6 +64,16 @@ using namespace WhirlyKit;
     params.maxZoom = maxZoom;
 }
 
+- (int)reportedMaxZoom
+{
+    return params.reportedMaxZoom;
+}
+
+- (void)setReportedMaxZoom:(int)reportedMaxZoom
+{
+    params.reportedMaxZoom = reportedMaxZoom;
+}
+
 - (int)maxTiles
 {
     return params.maxTiles;
@@ -259,7 +269,7 @@ using namespace WhirlyKit;
 
     @synchronized(self)
     {
-        notifyDelegate = sampleControl.addBuilderDelegate(delegate);
+        notifyDelegate = sampleControl.addBuilderDelegate(NULL,delegate);
     }
     
     NSNumber *whichDelegate = @(delegate->getId());
@@ -278,14 +288,14 @@ using namespace WhirlyKit;
 - (void)notifyDelegateStartup:(NSNumber *)numID
 {
     ChangeSet changes;
-    sampleControl.notifyDelegateStartup([numID longLongValue],changes);
+    sampleControl.notifyDelegateStartup(NULL,[numID longLongValue],changes);
 
     [_quadLayer.layerThread addChangeRequests:changes];
 }
 
 - (void)removeBuilderDelegate:(QuadTileBuilderDelegateRef)delegate
 {
-    sampleControl.removeBuilderDelegate(delegate);
+    sampleControl.removeBuilderDelegate(NULL,delegate);
 }
 
 @end

@@ -58,27 +58,60 @@ public:
     MTLRenderPassDescriptor *renderPassDesc;
     // Current render target
     RenderTargetMTL *renderTarget;
+
+    id<MTLBlitCommandEncoder> bltEncode;
+    id<MTLRenderCommandEncoder> cmdEncode;
 };
 
-/// Copy one of our matrices into Metal format
-void CopyIntoMtlFloat4x4(simd::float4x4 &dest,Eigen::Matrix4f &src);
-void CopyIntoMtlFloat4x4(simd::float4x4 &dest,Eigen::Matrix4d &src);
+// Drawables sorted by draw priority and grouped by state
+class DrawGroupMTL {
+public:
+    // Depth/stencil values are the reason for these groups
+    id<MTLDepthStencilState> depthStencil;
+    
+    // Indirect render buffer
+    API_AVAILABLE(ios(12.0)) id<MTLIndirectCommandBuffer> indCmdBuff;
+    int numCommands;
 
-/// Copy one of our points into Metal form
-void CopyIntoMtlFloat3(simd::float3 &dest,const Point3d &src);
+    // Drawables in this group
+    std::vector<DrawableRef> drawables;
+    
+    // Resources used by this group
+    ResourceRefsMTL resources;
+};
+typedef std::shared_ptr<DrawGroupMTL> DrawGroupMTLRef;
 
-/// Copy one of our points into Metal form
-void CopyIntoMtlFloat3(simd::float3 &dest,const Point3f &src);
+// This version stores indirect render command buffers
+class RenderTargetContainerMTL : public RenderTargetContainer
+{
+public:
+    RenderTargetContainerMTL(RenderTargetRef renderTarget);
+    
+    // Drawables sorted into groups for drawing
+    // For Metal we have specialized versions
+    std::vector<DrawGroupMTLRef> drawGroups;
+    
+    // This keeps us from stomping on the previous frame's uniforms
+    id<MTLFence> lastRenderFence;
+};
+typedef std::shared_ptr<RenderTargetContainerMTL> RenderTargetContainerMTLRef;
 
-/// Copy one of our 4D points into Metal form
-void CopyIntoMtlFloat4(simd::float4 &dest,const Eigen::Vector4f &src);
-void CopyIntoMtlFloat4(simd::float4 &dest,const float vals[4]);
+// Metal version of WorkGroup has a bit more cached info
+class WorkGroupMTL : public WorkGroup
+{
+public:
+    WorkGroupMTL(GroupType groupType);
+    virtual ~WorkGroupMTL();
+    
+protected:
+    virtual RenderTargetContainerRef makeRenderTargetContainer(RenderTargetRef renderTarget);
+};
     
 /// Metal version of the Scene Renderer
 class SceneRendererMTL : public SceneRenderer
 {
 public:
-    SceneRendererMTL(id<MTLDevice> mtlDevice,float scale);
+    SceneRendererMTL(id<MTLDevice> mtlDevice,id<MTLLibrary> mtlLibrary,float scale);
     virtual ~SceneRendererMTL();
     
     // Metal (obviously)
@@ -107,6 +140,9 @@ public:
     
     /// Remove an existing snapshot delegate
     void removeSnapshotDelegate(NSObject<WhirlyKitSnapshot> *);
+    
+    /// Move things around as required by outside updates
+    virtual void updateWorkGroups(RendererFrameInfo *frameInfo);
 
     /// Construct a basic drawable builder for the appropriate rendering type
     virtual BasicDrawableBuilderRef makeBasicDrawableBuilder(const std::string &name) const;
@@ -133,16 +169,16 @@ public:
     virtual DynamicTextureRef makeDynamicTexture(const std::string &name) const;
     
     /// Set up the buffer for general uniforms and attach it to its vertex/fragment buffers
-    void setupUniformBuffer(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,CoordSystemDisplayAdapter *coordAdapter,int texLevel);
+    void setupUniformBuffer(RendererFrameInfoMTL *frameInfo, id<MTLBlitCommandEncoder> bltEncode,CoordSystemDisplayAdapter *coordAdapter);
 
     /// Set the lights and tie them to a vertex buffer index
-    void setupLightBuffer(SceneMTL *scene,id<MTLRenderCommandEncoder> cmdEncode);
+    void setupLightBuffer(SceneMTL *scene,RendererFrameInfoMTL *frameInfo,id<MTLBlitCommandEncoder> bltEncode);
     
     // Apply the various defaults to DrawStateA
-    void setupDrawStateA(WhirlyKitShader::UniformDrawStateA &drawState,RendererFrameInfoMTL *frameInfo);
+    void setupDrawStateA(WhirlyKitShader::UniformDrawStateA &drawState);
     
     // Generate a render pipeline descriptor matching the given frame
-    MTLRenderPipelineDescriptor *defaultRenderPipelineState(SceneRendererMTL *sceneRender,RendererFrameInfoMTL *frameInfo);
+    MTLRenderPipelineDescriptor *defaultRenderPipelineState(SceneRendererMTL *sceneRender,ProgramMTL *program,RenderTargetMTL *renderTarget);
     
     // Return the whole buffer for a given render target
     RawDataRef getSnapshot(SimpleIdentity renderTargetID);
@@ -153,14 +189,22 @@ public:
     // Return the min/max values (assuming that option is on) for a render target
     RawDataRef getSnapshotMinMax(SimpleIdentity renderTargetID);
     
+    // Explicit wait for shutdown of ongoing frames
+    void shutdown();
+    
 public:
     RenderTargetMTLRef getRenderTarget(SimpleIdentity renderTargetID);
-    
+    bool isShuttingDown;
+    id<MTLCommandBuffer> lastCmdBuff;
+
+    // If set, we'll use indirect rendering
+    bool indirectRender;
     // By default offscreen rendering turns on or off blend enable
     bool offscreenBlendEnable;
     // Information about the renderer passed around to various calls
     RenderSetupInfoMTL setupInfo;
     std::vector<NSObject<WhirlyKitSnapshot> *> snapshotDelegates;
+    dispatch_queue_t releaseQueue;
 };
     
 typedef std::shared_ptr<SceneRendererMTL> SceneRendererMTLRef;

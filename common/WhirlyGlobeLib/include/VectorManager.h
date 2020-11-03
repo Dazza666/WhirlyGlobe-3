@@ -83,7 +83,10 @@ public:
     bool                        centered;
     bool                        vecCenterSet;
     Point2f                     vecCenter;
+    FloatExpressionInfoRef      opacityExp;
+    ColorExpressionInfoRef      colorExp;
 };
+typedef std::shared_ptr<VectorInfo> VectorInfoRef;
 
 #define kWKVectorManager "WKVectorManager"
 

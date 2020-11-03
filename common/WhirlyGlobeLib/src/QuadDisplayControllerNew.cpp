@@ -33,12 +33,13 @@ QuadDataStructure::~QuadDataStructure()
 }
 
 QuadDisplayControllerNew::QuadDisplayControllerNew(QuadDataStructure *dataStructure,QuadLoaderNew *loader,SceneRenderer *renderer)
-    : dataStructure(dataStructure), loader(loader), renderer(renderer), QuadTreeNew(MbrD(dataStructure->getTotalExtents()),dataStructure->getMinZoom(),dataStructure->getMaxZoom())
+    : dataStructure(dataStructure), loader(loader), renderer(renderer), zoomSlot(-1), QuadTreeNew(MbrD(dataStructure->getTotalExtents()),dataStructure->getMinZoom(),dataStructure->getMaxZoom())
 {
     coordSys = dataStructure->getCoordSystem();
     mbr = dataStructure->getValidExtents();
     minZoom = dataStructure->getMinZoom();
     maxZoom = dataStructure->getMaxZoom();
+    reportedMaxZoom = dataStructure->getReportedMaxZoom();
     maxTiles = 128;
     // TODO: Set this to 0.2 for older devices
     viewUpdatePeriod = 0.1;
@@ -46,6 +47,9 @@ QuadDisplayControllerNew::QuadDisplayControllerNew(QuadDataStructure *dataStruct
     keepMinLevel = true;
     keepMinLevelHeight = 0.0;
     scene = renderer->getScene();
+    zoomSlot = scene->retainZoomSlot();
+    lastTargetLevel = -1.0;
+    lastTargetDecimal = -1.0;
 }
     
 QuadDisplayControllerNew::~QuadDisplayControllerNew()
@@ -126,6 +130,13 @@ std::vector<double> QuadDisplayControllerNew::getMinImportancePerLevel()
 void QuadDisplayControllerNew::setMinImportancePerLevel(const std::vector<double> &imports)
 {
     minImportancePerLevel = imports;
+    
+    // Version we'll use for reaching deeper down
+    if (reportedMaxZoom > maxZoom) {
+        reportedMinImportancePerLevel.resize(reportedMaxZoom);
+        for (unsigned int ii=0;ii<reportedMinImportancePerLevel.size();ii++)
+            reportedMinImportancePerLevel[ii] = ii >= minImportancePerLevel.size() ? minImportancePerLevel[minImportancePerLevel.size()-1] : minImportancePerLevel[ii];
+    }
 }
     
 QuadDataStructure *QuadDisplayControllerNew::getDataStructure()
@@ -137,6 +148,11 @@ ViewStateRef QuadDisplayControllerNew::getViewState()
 {
     return viewState;
 }
+
+int QuadDisplayControllerNew::getZoomSlot()
+{
+    return zoomSlot;
+}
     
 // Called on the LayerThread
 void QuadDisplayControllerNew::start()
@@ -144,16 +160,17 @@ void QuadDisplayControllerNew::start()
     loader->setController(this);
 }
     
-void QuadDisplayControllerNew::stop(ChangeSet &changes)
+void QuadDisplayControllerNew::stop(PlatformThreadInfo *threadInfo,ChangeSet &changes)
 {
-    loader->quadLoaderShutdown(changes);
+    scene->releaseZoomSlot(zoomSlot);
+    loader->quadLoaderShutdown(threadInfo,changes);
     dataStructure = NULL;
     loader = NULL;
     
     scene = NULL;
 }
     
-bool QuadDisplayControllerNew::viewUpdate(ViewStateRef inViewState,ChangeSet &changes)
+bool QuadDisplayControllerNew::viewUpdate(PlatformThreadInfo *threadInfo,ViewStateRef inViewState,ChangeSet &changes)
 {
     if (!scene)
         return true;
@@ -177,15 +194,17 @@ bool QuadDisplayControllerNew::viewUpdate(ViewStateRef inViewState,ChangeSet &ch
     // Nodes to load are different for single level vs regular loading
     QuadTreeNew::ImportantNodeSet newNodes;
     int targetLevel = -1;
+    std::vector<double> maxRejectedImport((reportedMaxZoom > 0 ? reportedMaxZoom : maxLevel) +1,0.0);
     if (singleLevel) {
-        std::tie(targetLevel,newNodes) = calcCoverageVisible(minImportancePerLevel, maxTiles, levelLoads, localKeepMinLevel);
+        std::tie(targetLevel,newNodes) = calcCoverageVisible(minImportancePerLevel, maxTiles, levelLoads, localKeepMinLevel, maxRejectedImport);
     } else {
-        newNodes = calcCoverageImportance(minImportancePerLevel,maxTiles,true);
+        newNodes = calcCoverageImportance(minImportancePerLevel,maxTiles,true, maxRejectedImport);
         // Just take the highest level as target
         for (auto node : newNodes)
             targetLevel = std::max(targetLevel,node.level);
     }
-    
+    double maxRatio = targetLevel >= maxLevel ? 0.0 : maxRejectedImport[targetLevel+1];
+
 //    wkLogLevel(Debug,"Selected level %d for %d nodes",targetLevel,(int)newNodes.size());
 //    for (auto node: newNodes) {
 //        wkLogLevel(Debug," %d: (%d,%d), import = %f",node.level,node.x,node.y,node.importance);
@@ -215,7 +234,7 @@ bool QuadDisplayControllerNew::viewUpdate(ViewStateRef inViewState,ChangeSet &ch
             toUpdate.insert(node);
     
     QuadTreeNew::NodeSet removesToKeep;
-    removesToKeep = loader->quadLoaderUpdate(toAdd, toRemove, toUpdate, targetLevel,changes);
+    removesToKeep = loader->quadLoaderUpdate(threadInfo, toAdd, toRemove, toUpdate, targetLevel, changes);
     
     bool needsDelayCheck = !removesToKeep.empty();
     
@@ -224,6 +243,37 @@ bool QuadDisplayControllerNew::viewUpdate(ViewStateRef inViewState,ChangeSet &ch
         currentNodes.insert(QuadTreeNew::ImportantNode(node,0.0));
     }
     
+    // If we're at the max level, we may want to reach beyond
+    int testTargetLevel = targetLevel;
+    if (reportedMaxZoom > maxZoom && targetLevel == maxZoom) {
+        int oldMaxLevel = maxLevel;
+        maxLevel = reportedMaxZoom;
+        QuadTreeNew::ImportantNodeSet testNodes;
+        std::vector<double> maxRejectedImport(reportedMaxZoom+1,0.0);
+        std::tie(testTargetLevel,testNodes) = calcCoverageVisible(reportedMinImportancePerLevel, maxTiles, levelLoads, localKeepMinLevel, maxRejectedImport);
+        maxLevel = oldMaxLevel;
+        maxRatio = testTargetLevel >= maxRejectedImport.size() ? 0.0 : maxRejectedImport[testTargetLevel+1];
+    }
+
+    // We take the largest importance for a tile beyond the one we're loading and use
+    //  that as a proxy for fractional zoom level
+    double testTargetDecimal = maxRatio;
+    // This will rarely be less than 0.25 (quad tree), so we scale accordingly
+    testTargetDecimal = (testTargetDecimal-0.25)/0.75;
+    testTargetDecimal = std::max(std::min(testTargetDecimal,0.99999999999),0.0);
+
+    // If the level changed (at least 1/100) then update it
+    if (testTargetLevel != lastTargetLevel ||
+        std::abs(testTargetDecimal-lastTargetDecimal) > 0.01) {
+        lastTargetLevel = testTargetLevel;
+        lastTargetDecimal = testTargetDecimal;
+        float newZoom = lastTargetLevel+lastTargetDecimal;
+        if (zoomSlot > -1) {
+//            wkLogLevel(Debug, "zoomSlot = %d, zoom = %f",zoomSlot,newZoom);
+            changes.push_back(new SetZoomSlotReq(zoomSlot,newZoom));
+        }
+    }
+        
     return needsDelayCheck;
 }
     

@@ -29,7 +29,7 @@ namespace WhirlyKit
 {
     
 ProgramMTL::TextureEntry::TextureEntry()
-: slot(-1), tex(nil)
+: slot(-1)
 {
 }
     
@@ -72,27 +72,42 @@ bool ProgramMTL::setTexture(StringIdentity nameID,TextureBase *tex,int textureSl
     
     TextureEntry texEntry;
     texEntry.slot = textureSlot;
-    texEntry.tex = texMTL->getMTLID();
+    texEntry.texBuf = texMTL->getMTLTex();
+    texEntry.texID = tex->getId();
     textures.push_back(texEntry);
     
+    changed = true;
+    
     return true;
+}
+
+void ProgramMTL::clearTexture(SimpleIdentity texID)
+{
+    std::vector<int> entries;
+
+    int which = 0;
+    for (auto texEntry: textures) {
+        if (texEntry.texID == texID) {
+            entries.push_back(which);
+        }
+        which++;
+    }
+    
+    for (auto entry = entries.rbegin(); entry != entries.rend(); entry++) {
+        textures.erase(textures.begin()+*entry);
+    }
+    
+    changed = true;
 }
 
 const std::string &ProgramMTL::getName()
 { return name; }
 
-void ProgramMTL::teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene)
+void ProgramMTL::teardownForRenderer(const RenderSetupInfo *setupInfo,Scene *scene,RenderTeardownInfoRef inTeardown)
 {
-    // Don't really need to do anything here
-}
+    RenderTeardownInfoMTLRef teardown = std::dynamic_pointer_cast<RenderTeardownInfoMTL>(inTeardown);
 
-void ProgramMTL::addResources(RendererFrameInfoMTL *frameInfo,id<MTLRenderCommandEncoder> cmdEncode,SceneMTL *scene)
-{
-    // Slot in the textures
-    for (auto texEntry : textures) {
-        [cmdEncode setVertexTexture:texEntry.tex atIndex:WKSTextureEntryLookup+texEntry.slot];
-        [cmdEncode setFragmentTexture:texEntry.tex atIndex:WKSTextureEntryLookup+texEntry.slot];
-    }
+    textures.clear();
 }
     
 }

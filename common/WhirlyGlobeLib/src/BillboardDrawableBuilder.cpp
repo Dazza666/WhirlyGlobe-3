@@ -19,7 +19,7 @@
  */
 
 #import "BillboardDrawableBuilder.h"
-#import "ProgramGLES.h"
+#import "Program.h"
 #import "SceneRenderer.h"
 
 namespace WhirlyKit
@@ -28,6 +28,7 @@ namespace WhirlyKit
 void BillboardDrawableBuilder::Init()
 {
     BasicDrawableBuilder::Init();
+    setupStandardAttributes(0);
     offsetIndex = addAttribute(BDFloat3Type, StringIndexer::getStringID("a_offset"));
     groundMode = false;
 }

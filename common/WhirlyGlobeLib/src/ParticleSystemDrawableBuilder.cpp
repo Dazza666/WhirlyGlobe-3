@@ -23,8 +23,8 @@
 namespace WhirlyKit
 {
 
-ParticleSystemDrawableBuilder::ParticleSystemDrawableBuilder(const std::string &name)
-: name(name)
+ParticleSystemDrawableBuilder::ParticleSystemDrawableBuilder(const std::string &name,Scene *scene)
+: name(name), scene(scene)
 {    
 }
     
@@ -34,6 +34,7 @@ ParticleSystemDrawableBuilder::~ParticleSystemDrawableBuilder()
     
 void ParticleSystemDrawableBuilder::setup(const std::vector<SingleVertexAttributeInfo> &inVertAttrs,
                                            const std::vector<SingleVertexAttributeInfo> &inVaryAttrs,
+                                           const std::vector<SimpleIdentity > &inVaryNames,
                                            int numTotalPoints,
                                           int batchSize,
                                           int vertexSize,
@@ -47,7 +48,7 @@ void ParticleSystemDrawableBuilder::setup(const std::vector<SingleVertexAttribut
     draw->useRectangles = useRectangles;
     draw->useInstancing = useInstancing;
     
-    draw->setupBaches();
+    draw->setupBatches();
 }
 
 }

@@ -78,6 +78,9 @@ public:
     /// Called once per frame to build a render pass descriptor
     void makeRenderPassDesc();
     
+    /// For screen output we get this from the system as we're drawing
+    void setRenderPassDesc(MTLRenderPassDescriptor *renderPassDesc);
+    
     /// Get the last render pass descriptor built
     MTLRenderPassDescriptor *getRenderPassDesc(int level=-1);
     
@@ -89,6 +92,7 @@ protected:
     MTLPixelFormat pixelFormat;
     id<MTLTexture> depthTex;
     MTLPixelFormat depthPixelFormat;
+    bool renderPassDescSetFromOutside;
     std::vector<MTLRenderPassDescriptor *> renderPassDesc;
     MPSImagePyramid *mipmapKernel;
     id<MTLTexture> minMaxOutTex;

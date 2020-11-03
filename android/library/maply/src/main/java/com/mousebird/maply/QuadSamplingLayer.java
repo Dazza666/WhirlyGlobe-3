@@ -31,7 +31,7 @@ import java.util.logging.Handler;
  *  tiles to load.  We hook up other things to this to actually do
  *  the loading.
  */
-class QuadSamplingLayer extends Layer implements LayerThread.ViewWatcherInterface
+public class QuadSamplingLayer extends Layer implements LayerThread.ViewWatcherInterface
 {
     WeakReference<BaseController> control;
     SamplingParams params;
@@ -46,7 +46,7 @@ class QuadSamplingLayer extends Layer implements LayerThread.ViewWatcherInterfac
     }
 
     // Used to hook
-    interface ClientInterface {
+    public interface ClientInterface {
         void samplingLayerConnect(QuadSamplingLayer layer,ChangeSet changes);
         void samplingLayerDisconnect(QuadSamplingLayer layer,ChangeSet changes);
     }
@@ -96,8 +96,11 @@ class QuadSamplingLayer extends Layer implements LayerThread.ViewWatcherInterfac
         layerThread.addChanges(changes);
     }
 
+    boolean isShuttingDown = false;
+
     public void shutdown()
     {
+        isShuttingDown = true;
         ChangeSet changes = new ChangeSet();
         shutdownNative(changes);
         layerThread.addChanges(changes);
@@ -109,15 +112,24 @@ class QuadSamplingLayer extends Layer implements LayerThread.ViewWatcherInterfac
     /** --- View Updated Methods --- **/
     public void viewUpdated(final ViewState viewState)
     {
+        if (isShuttingDown)
+            return;
+
         generation++;
         final int thisGeneration = generation;
 
         ChangeSet changes = new ChangeSet();
         if (viewUpdatedNative(viewState,changes)) {
+            if (isShuttingDown)
+                return;
+
             // Have a few things left to process.  So come back in a bit and do them.
             layerThread.addDelayedTask(new Runnable() {
                 @Override
                 public void run() {
+                    if (isShuttingDown)
+                        return;
+
                     // If we've moved on, then cancel
                     if (thisGeneration < generation)
                         return;

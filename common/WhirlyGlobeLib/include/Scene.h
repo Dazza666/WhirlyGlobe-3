@@ -30,6 +30,8 @@
 
 namespace WhirlyKit
 {
+
+#define MaplyMaxZoomSlots 32
     
 class SceneRenderer;
 class Scene;
@@ -56,7 +58,7 @@ public:
     virtual bool needsFlush() { return true; }
     
     /// Create the texture on its native thread
-    virtual void setupForRenderer(const RenderSetupInfo *setupInfo);
+    virtual void setupForRenderer(const RenderSetupInfo *setupInfo,Scene *scene);
 
 	/// Add to the renderer.  Never call this.
 	void execute(Scene *scene,SceneRenderer *renderer,View *view);
@@ -98,7 +100,7 @@ public:
     virtual bool needsFlush() { return true; }
     
     /// Create the drawable on its native thread
-    virtual void setupForRenderer(const RenderSetupInfo *);
+    virtual void setupForRenderer(const RenderSetupInfo *,Scene *scene);
 
 	/// Add to the renderer.  Never call this
 	void execute(Scene *scene,SceneRenderer *renderer,View *view);
@@ -112,15 +114,15 @@ class RemDrawableReq : public ChangeRequest
 {
 public:
     /// Construct with the drawable ID and an optional fade interval
-	RemDrawableReq(SimpleIdentity drawId) : drawable(drawId) { }
+	RemDrawableReq(SimpleIdentity drawId);
     /// This version is a timed delete
-    RemDrawableReq(SimpleIdentity drawId,TimeInterval inWhen) : drawable(drawId) { when = inWhen; }
+    RemDrawableReq(SimpleIdentity drawId,TimeInterval inWhen);
 
     /// Remove the drawable.  Never call this
 	void execute(Scene *scene,SceneRenderer *renderer,View *view);
 	
 protected:	
-	SimpleIdentity drawable;
+	SimpleIdentity drawID;
 };
     
 /// Add an OpenGL ES 2.0 program to the scene for user later
@@ -188,6 +190,20 @@ public:
     
 protected:
     BlockFunc func;
+};
+
+/// Set the zoom slot to a given zoom value
+class SetZoomSlotReq : public ChangeRequest
+{
+public:
+    SetZoomSlotReq(int zoomSlot,float zoomVal);
+    
+    /// Set the actual values in the scene
+    void execute(Scene *scene,SceneRenderer *renderer,View *view);
+    
+protected:
+    int zoomSlot;
+    float zoomVal;
 };
         
 typedef std::unordered_map<SimpleIdentity,DrawableRef> DrawableRefSet;
@@ -279,8 +295,20 @@ public:
     /// The scene is responsible for the Drawable after this call.
     virtual void addDrawable(DrawableRef drawable);
     
+    /// Look for a Drawable by ID
+    DrawableRef getDrawable(SimpleIdentity drawId);
+
     /// Remove a drawable from the scene
     virtual void remDrawable(DrawableRef drawable);
+    
+    /// Add a fully formed texture
+    virtual void addTexture(TextureBaseRef texRef);
+    
+    /// Look for a Texture by ID
+    TextureBaseRef getTexture(SimpleIdentity texId);
+    
+    /// Remove a texture by ID.  Return true if it was there
+    virtual bool removeTexture(SimpleIdentity texID);
 
     /// Called once by the renderer so we can reset any managers that care
     void setRenderer(SceneRenderer *renderer);
@@ -304,7 +332,7 @@ public:
 //    dispatch_queue_t getDispatchQueue() { return dispatchQueue; }
     
     // Return all the drawables in a list.  Only call this on the main thread.
-    const DrawableRefSet &getDrawables();
+    const std::vector<Drawable *> getDrawables();
     
     // Used for offline frame by frame rendering
     void setCurrentTime(TimeInterval newTime);
@@ -312,6 +340,9 @@ public:
     // In general, this is just the system time.
     // But in offline render mode, we control this carefully
     TimeInterval getCurrentTime();
+    
+    // Base time at system initialization
+    TimeInterval getBaseTime();
     
     // Used to track overlaps at the edges of a viewable area
     void addLocalMbr(const Mbr &localMbr);
@@ -322,8 +353,54 @@ public:
     
     /// Tear down renderer related assets
     virtual void teardown() = 0;
+    
+    /// Mark any changed programs as acknowledged (used in Metal)
+    void markProgramsUnchanged();
+    
+    /// Allocate a new zoom slot
+    int retainZoomSlot();
+    
+    /// Release a zoom slot for use somewhere else
+    void releaseZoomSlot(int zoomSlot);
+    
+    /// Update the zoom value for a given slot
+    void setZoomSlotValue(int zoomSlot,float zoom);
+    
+    /// Return the given zoom slot value
+    float getZoomSlotValue(int zoomSlot);
+    
+    /// Copy all the zoom slots into a destination array
+    void copyZoomSlots(float *dest);
 	
-public:
+    /// Add a shader for reference, but not with a scene name.
+    /// Presumably you'll call setSceneProgram() shortly.
+    void addProgram(ProgramRef prog);
+    
+    /// Search for a shader program by ID (our ID, not OpenGL's)
+    Program *getProgram(SimpleIdentity programId);
+
+    /// Remove the given program by ID (ours, not OpenGL's)
+    void removeProgram(SimpleIdentity progId,RenderTeardownInfoRef teardown);
+
+    /// Look for a program by its name (last to first)
+    Program *findProgramByName(const std::string &name);
+
+    /// For 2D maps we have an overlap margin based on what drawables may overlap the edges
+    double getOverlapMargin() { return overlapMargin; }
+    
+    /// Return the active models (main thread only)
+    std::vector<ActiveModelRef> &getActiveModels() { return activeModels; }
+    
+    /// Return the number of change requests
+    int getNumChangeRequests();
+
+    /// Set up the font texture manager.  Don't call this yourself.
+    void setFontTextureManager(FontTextureManagerRef newManager);
+
+    /// Returns the font texture manager, which is thread safe
+    FontTextureManager *getFontTextureManager() { return fontTextureManager.get(); }
+
+protected:
     /// Don't be calling this
     void setDisplayAdapter(CoordSystemDisplayAdapter *newCoordAdapter);
     
@@ -334,17 +411,12 @@ public:
     /// The coordinate system display adapter converts from the local space
     ///  to display coordinates.
     CoordSystemDisplayAdapter *coordAdapter;
-    
-    /// Look for a Drawable by ID
-    DrawableRef getDrawable(SimpleIdentity drawId);
-    
-    /// Look for a Texture by ID
-    TextureBase *getTexture(SimpleIdentity texId);
-        
+                
     /// All the active models
     std::vector<ActiveModelRef> activeModels;
     
     /// All the drawables we've been handed, sorted by ID
+    std::mutex drawablesLock;
     DrawableRefSet drawables;
     
     typedef std::unordered_map<SimpleIdentity,TextureBaseRef> TextureRefSet;
@@ -370,36 +442,20 @@ public:
     
     /// Managers for various functionality
     std::map<std::string,SceneManager *> managers;
-    
-    /// Returns the font texture manager, which is thread safe
-    FontTextureManager *getFontTextureManager() { return fontTextureManager.get(); }
-    
-    /// Set up the font texture manager.  Don't call this yourself.
-    void setFontTextureManager(FontTextureManagerRef newManager);
-        
+                
     /// Lock for accessing programs
     std::mutex programLock;
-    
-    /// Search for a shader program by ID (our ID, not OpenGL's)
-    Program *getProgram(SimpleIdentity programId);
-    
-    /// Look for a program by its name (last to first)
-    Program *findProgramByName(const std::string &name);
-    
-    /// Add a shader for reference, but not with a scene name.
-    /// Presumably you'll call setSceneProgram() shortly.
-    void addProgram(ProgramRef prog);
-    
-    /// Remove the given program by ID (ours, not OpenGL's)
-    void removeProgram(SimpleIdentity progId);
-    
-    /// For 2D maps we have an overlap margin based on what drawables may overlap the edges
-    double getOverlapMargin() { return overlapMargin; }
+                    
+    // Sampling layers will set these to talk to shaders
+    std::mutex zoomSlotLock;
+    float zoomSlots[MaplyMaxZoomSlots];
     
 protected:
     
     // If time is being set externally
     TimeInterval currentTime;
+    // Time at initialization
+    TimeInterval baseTime;
 
     /// All the OpenGL ES 2.0 shader programs we know about
     ProgramSet programs;

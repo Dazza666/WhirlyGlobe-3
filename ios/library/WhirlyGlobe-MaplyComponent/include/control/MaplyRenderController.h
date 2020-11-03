@@ -56,7 +56,7 @@ typedef NS_ENUM(NSInteger, MaplyQuadImageFormat) {
     MaplyImage4Layer8Bit,
     // Metal only
     MaplyImageSingleFloat16,MaplyImageSingleFloat32,MaplyImageDoubleFloat16,MaplyImageDoubleFloat32,MaplyImageQuadFloat16,MaplyImageQuadFloat32,
-    MaplyImageUInt32,MaplyImageDoubleUInt32,MaplyImageQuadUInt32
+    MaplyImageInt16,MaplyImageUInt32,MaplyImageDoubleUInt32,MaplyImageQuadUInt32
 };
 
 /// Wrap values for certain types of textures
@@ -68,7 +68,7 @@ typedef NS_ENUM(NSInteger, MaplyQuadImageFormat) {
 
 /// The system can set up as either GL or Metal
 typedef NS_ENUM(NSInteger, MaplyRenderType) {
-    MaplyRenderGLES,
+//    MaplyRenderGLES,
     MaplyRenderMetal,
     MaplyRenderUnknown
 };
@@ -617,11 +617,7 @@ typedef NS_ENUM(NSInteger, MaplyRenderType) {
  
  
  @param polys An NSArray of MaplyVectorObject.
- 
- @param key This is part of an old caching system that's no longer necessary.  Set it to nil.
- 
- @param cacheDb This is part of an old caching system that's no longer necessary.  Set it to nil.
- 
+  
  @param desc The desciption dictionary which controls how the lofted polys will look.  It takes the following entries.
  
  @param threadMode For MaplyThreadAny we'll do the add on another thread.  For MaplyThreadCurrent we'll block the current thread to finish the add.  MaplyThreadAny is preferred.
@@ -933,6 +929,11 @@ typedef NS_ENUM(NSInteger, MaplyRenderType) {
    If in Metal rendering mode, return the shader library set up by the toolkit.
   */
 - (id<MTLLibrary> __nullable)getMetalLibrary;
+
+/**
+ An explicit teardown.  For render controllers you allocate standalone, this is a good idea.
+ */
+- (void)teardown;
 
 @end
 

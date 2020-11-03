@@ -42,7 +42,7 @@
 @property (nonatomic) MaplyTileID tileID;
 
 /// If set, the frame.  -1 by default
-@property (nonatomic) int frame;
+@property (nonatomic,readonly) int frame;
 
 /// Data returned from a tile request.  Unparsed.
 /// You can add multiple of these, but the interpreter should be expecting that
@@ -172,6 +172,11 @@
  */
 - (MaplyCoordinate3d)displayCenterForTile:(MaplyTileID)tileID;
 
+/**
+    Each sampling layer allocates a slot to keep track of continuous zoom levels.
+    Those are passed all the way through to the individual shaders.
+ */
+- (int)getZoomSlot;
 
 /// Use a specific tile fetcher rather than the one shared by everyone else
 - (void)setTileFetcher:(NSObject<MaplyTileFetcher> * __nonnull)tileFetcher;

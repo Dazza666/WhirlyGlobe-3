@@ -32,6 +32,30 @@ JNIEXPORT void JNICALL Java_com_mousebird_maply_ViewState_nativeInit
 	ViewStateRefClassInfo::getClassInfo(env,cls);
 }
 
+static std::mutex disposeMutex;
+
+JNIEXPORT void JNICALL Java_com_mousebird_maply_ViewState_dispose
+		(JNIEnv *env, jobject obj)
+{
+	try
+	{
+		ViewStateRefClassInfo *classInfo = ViewStateRefClassInfo::getClassInfo();
+		{
+			std::lock_guard<std::mutex> lock(disposeMutex);
+			ViewStateRef *viewState = classInfo->getObject(env,obj);
+			if (!viewState)
+				return;
+			delete viewState;
+
+			classInfo->clearHandle(env,obj);
+		}
+	}
+	catch (...)
+	{
+		__android_log_print(ANDROID_LOG_VERBOSE, "Maply", "Crash in ViewState::dispose()");
+	}
+}
+
 JNIEXPORT jboolean JNICALL Java_com_mousebird_maply_ViewState_isEqual
   (JNIEnv *env, jobject obj, jobject otherObj)
 {
@@ -47,8 +71,28 @@ JNIEXPORT jboolean JNICALL Java_com_mousebird_maply_ViewState_isEqual
 	}
 	catch (...)
 	{
-		__android_log_print(ANDROID_LOG_VERBOSE, "Maply", "Crash in VectorInfo::isEqual()");
+		__android_log_print(ANDROID_LOG_VERBOSE, "Maply", "Crash in ViewState::isEqual()");
 	}
     
     return false;
+}
+
+JNIEXPORT jobject JNICALL Java_com_mousebird_maply_ViewState_getEyePos
+		(JNIEnv *env, jobject obj)
+{
+	try
+	{
+		ViewStateRefClassInfo *classInfo = ViewStateRefClassInfo::getClassInfo();
+		ViewStateRef *viewState = classInfo->getObject(env,obj);
+		if (!viewState)
+			return NULL;
+
+        return MakePoint3d(env,(*viewState)->eyePos);
+	}
+	catch (...)
+	{
+		__android_log_print(ANDROID_LOG_VERBOSE, "Maply", "Crash in ViewState::getEyePos()");
+	}
+
+	return NULL;
 }

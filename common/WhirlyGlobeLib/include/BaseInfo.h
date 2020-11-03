@@ -36,6 +36,49 @@ typedef std::shared_ptr<BasicDrawableBuilder> BasicDrawableBuilderRef;
 class BasicDrawableInstanceBuilder;
 typedef std::shared_ptr<BasicDrawableInstanceBuilder> BasicDrawableInstanceBuilderRef;
 
+/// Types of expressions we'll support for certain fields
+typedef enum {ExpressionNone,ExpressionLinear,ExpressionExponential} ExpressionInfoType;
+
+/// Base class for expressions
+class ExpressionInfo : public Identifiable
+{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+    ExpressionInfo();
+    ExpressionInfo(const ExpressionInfo &that);
+    
+    ExpressionInfoType type;
+    
+    float base;  // Used for exponential expressions
+    std::vector<float> stopInputs;
+};
+
+/// Single float expression (e.g. opacity or what have you)
+class FloatExpressionInfo: public ExpressionInfo
+{
+public:
+    FloatExpressionInfo();
+    FloatExpressionInfo(const FloatExpressionInfo &that);
+    
+    // Scale the outputs by the given value
+    void scaleBy(double scale);
+    
+    std::vector<float> stopOutputs;
+};
+typedef std::shared_ptr<FloatExpressionInfo> FloatExpressionInfoRef;
+
+/// Color expression (e.g. for continuous color changes)
+class ColorExpressionInfo: public ExpressionInfo
+{
+public:
+    ColorExpressionInfo();
+    ColorExpressionInfo(const ColorExpressionInfo &that);
+    
+    std::vector<RGBAColor> stopOutputs;
+};
+typedef std::shared_ptr<ColorExpressionInfo> ColorExpressionInfoRef;
+
 /** Object use as the base for parsing description dictionaries.
  */
 class BaseInfo
@@ -44,6 +87,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     BaseInfo();
+    BaseInfo(const BaseInfo &that);
     BaseInfo(const Dictionary &dict);
     
     // Convert contents to a string for debugging
@@ -60,6 +104,8 @@ public:
     double minVis,maxVis;
     double minVisBand,maxVisBand;
     double minViewerDist,maxViewerDist;
+    int zoomSlot;
+    double minZoomVis,maxZoomVis;
     Point3d viewerCenter;
     double drawOffset;
     int drawPriority;
@@ -73,8 +119,10 @@ public:
     int extraFrames;
     bool zBufferRead,zBufferWrite;
     SimpleIdentity renderTargetID;
+    bool hasExp;   // Set if we're requiring the expressions to be passed through (problem on Metal)
     
     SingleVertexAttributeSet uniforms;
 };
+typedef std::shared_ptr<BaseInfo> BaseInfoRef;
 
 }

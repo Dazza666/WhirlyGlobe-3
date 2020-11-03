@@ -82,6 +82,10 @@ Scene::Scene(CoordSystemDisplayAdapter *adapter)
     addManager(kWKComponentManager, MakeComponentManager());
     
     overlapMargin = 0.0;
+    baseTime = TimeGetCurrent();
+    
+    for (unsigned int ii=0;ii<MaplyMaxZoomSlots;ii++)
+        zoomSlots[ii] = MAXFLOAT;
 }
 
 Scene::~Scene()
@@ -148,8 +152,17 @@ void Scene::addChangeRequest(ChangeRequest *newChange)
         changeRequests.push_back(newChange);
 }
 
+int Scene::getNumChangeRequests()
+{
+    std::lock_guard<std::mutex> guardLock(changeRequestLock);
+
+    return changeRequests.size();
+}
+
 DrawableRef Scene::getDrawable(SimpleIdentity drawId)
 {
+    std::lock_guard<std::mutex> guardLock(drawablesLock);
+    
     auto it = drawables.find(drawId);
     if (it != drawables.end())
         return it->second;
@@ -235,26 +248,44 @@ void Scene::removeActiveModel(ActiveModelRef activeModel)
     }
 }
     
-TextureBase *Scene::getTexture(SimpleIdentity texId)
+TextureBaseRef Scene::getTexture(SimpleIdentity texId)
 {
     std::lock_guard<std::mutex> guardLock(textureLock);
     
-    TextureBase *retTex = NULL;
+    TextureBaseRef retTex;
     auto it = textures.find(texId);
     if (it != textures.end())
-        retTex = it->second.get();
+        retTex = it->second;
     
     return retTex;
 }
     
-const DrawableRefSet &Scene::getDrawables()
+const std::vector<Drawable *> Scene::getDrawables()
 {
-    return drawables;
+    std::vector<Drawable *> retDraws;
+    
+    std::lock_guard<std::mutex> guardLock(drawablesLock);
+    for (auto it : drawables) {
+        retDraws.push_back(it.second.get());
+    }
+    
+    return retDraws;
 }
 
 void Scene::setCurrentTime(TimeInterval newTime)
 {
     currentTime = newTime;
+}
+
+void Scene::markProgramsUnchanged()
+{
+    std::lock_guard<std::mutex> guardLock(programLock);
+    
+    for (auto it: programs) {
+        auto prog = it.second;
+        if (prog->changed)
+            prog->changed = false;
+    }
 }
 
 TimeInterval Scene::getCurrentTime()
@@ -263,6 +294,11 @@ TimeInterval Scene::getCurrentTime()
         return TimeGetCurrent();
     
     return currentTime;
+}
+
+TimeInterval Scene::getBaseTime()
+{
+    return baseTime;
 }
     
 int Scene::preProcessChanges(WhirlyKit::View *view,SceneRenderer *renderer,TimeInterval now)
@@ -406,14 +442,38 @@ SubTexture Scene::getSubTexture(SimpleIdentity subTexId)
     
 void Scene::addDrawable(DrawableRef draw)
 {
+    std::lock_guard<std::mutex> guardLock(drawablesLock);
+
     drawables[draw->getId()] = draw;
 }
     
 void Scene::remDrawable(DrawableRef draw)
 {
+    std::lock_guard<std::mutex> guardLock(drawablesLock);
+
     auto it = drawables.find(draw->getId());
     if (it != drawables.end())
         drawables.erase(it);
+}
+
+void Scene::addTexture(TextureBaseRef texRef)
+{
+    std::lock_guard<std::mutex> guardLock(textureLock);
+    
+    textures[texRef->getId()] = texRef;
+}
+
+bool Scene::removeTexture(SimpleIdentity texID)
+{
+    std::lock_guard<std::mutex> guardLock(textureLock);
+    
+    auto it = textures.find(texID);
+    if (it != textures.end()) {
+        textures.erase(it);
+        return true;
+    }
+    
+    return false;
 }
     
 void Scene::dumpStats()
@@ -469,18 +529,66 @@ void Scene::addProgram(ProgramRef prog)
     programs[prog->getId()] = prog;
 }
 
-void Scene::removeProgram(SimpleIdentity progId)
+void Scene::removeProgram(SimpleIdentity progId,RenderTeardownInfoRef teardown)
 {
     std::lock_guard<std::mutex> guardLock(programLock);
 
     auto it = programs.find(progId);
     if (it != programs.end()) {
-        it->second->teardownForRenderer(setupInfo,this);
+        it->second->teardownForRenderer(setupInfo,this,NULL);
         programs.erase(it);
     }
 }
 
-void AddTextureReq::setupForRenderer(const RenderSetupInfo *setupInfo)
+int Scene::retainZoomSlot()
+{
+    std::lock_guard<std::mutex> guardLock(zoomSlotLock);
+    
+    // Look for an open slot
+    int found = -1;
+    for (int ii=0;ii<MaplyMaxZoomSlots;ii++) {
+        if (zoomSlots[ii] == MAXFLOAT) {
+            found = ii;
+            zoomSlots[ii] = 0.0;  // Means we're retaining it for use
+            break;
+        }
+    }
+
+    return found;
+}
+
+void Scene::releaseZoomSlot(int zoomSlot)
+{
+    std::lock_guard<std::mutex> guardLock(zoomSlotLock);
+
+    zoomSlots[zoomSlot] = MAXFLOAT;
+}
+
+void Scene::setZoomSlotValue(int zoomSlot,float zoom)
+{
+    std::lock_guard<std::mutex> guardLock(zoomSlotLock);
+
+    zoomSlots[zoomSlot] = zoom;
+}
+
+float Scene::getZoomSlotValue(int zoomSlot)
+{
+    std::lock_guard<std::mutex> guardLock(zoomSlotLock);
+    
+    if (zoomSlot < 0 || zoomSlot >= MaplyMaxZoomSlots)
+        return 0.0;
+
+    return zoomSlots[zoomSlot];
+}
+
+void Scene::copyZoomSlots(float *dest)
+{
+    std::lock_guard<std::mutex> guardLock(zoomSlotLock);
+
+    memcpy(dest, &zoomSlots[0], sizeof(float)*MaplyMaxZoomSlots);
+}
+
+void AddTextureReq::setupForRenderer(const RenderSetupInfo *setupInfo,Scene *scene)
 {
     if (texRef)
         texRef->createInRenderer(setupInfo);
@@ -499,27 +607,30 @@ AddTextureReq::~AddTextureReq()
 void AddTextureReq::execute(Scene *scene,SceneRenderer *renderer,WhirlyKit::View *view)
 {
     texRef->createInRenderer(renderer->getRenderSetupInfo());
-    scene->textures[texRef->getId()] = texRef;
+    scene->addTexture(texRef);
     texRef = NULL;
 }
 
 void RemTextureReq::execute(Scene *scene,SceneRenderer *renderer,WhirlyKit::View *view)
 {
-    std::lock_guard<std::mutex> guardLock(scene->textureLock);
-    auto it = scene->textures.find(texture);
-    if (it != scene->textures.end())
+    TextureBaseRef tex = scene->getTexture(texture);
+    if (tex)
     {
-        TextureBaseRef tex = it->second;
-        tex->destroyInRenderer(renderer->getRenderSetupInfo(),scene);
-        scene->textures.erase(it);
+        if (renderer->teardownInfo)
+            renderer->teardownInfo->destroyTexture(renderer,tex);
+        scene->removeTexture(texture);
     } else
         wkLogLevel(Warn,"RemTextureReq: No such texture.");
 }
     
-void AddDrawableReq::setupForRenderer(const RenderSetupInfo *setupInfo)
+void AddDrawableReq::setupForRenderer(const RenderSetupInfo *setupInfo,Scene *scene)
 {
-    if (drawRef)
-        drawRef->setupForRenderer(setupInfo);
+    if (drawRef) {
+        drawRef->setupForRenderer(setupInfo,scene);
+        
+        // Add it to the scene, even if we're on another thread
+        scene->addDrawable(drawRef);
+    }
 }
 
 AddDrawableReq::~AddDrawableReq()
@@ -551,15 +662,25 @@ void AddDrawableReq::execute(Scene *scene,SceneRenderer *renderer,WhirlyKit::Vie
     drawRef = NULL;
 }
 
+RemDrawableReq::RemDrawableReq(SimpleIdentity drawId) : drawID(drawId)
+{
+}
+
+RemDrawableReq::RemDrawableReq(SimpleIdentity drawId,TimeInterval inWhen)
+: drawID(drawId)
+{
+    when = inWhen;
+}
+
 void RemDrawableReq::execute(Scene *scene,SceneRenderer *renderer,WhirlyKit::View *view)
 {
-    auto it = scene->drawables.find(drawable);
-    if (it != scene->drawables.end())
+    DrawableRef draw = scene->getDrawable(drawID);
+    if (draw)
     {
-        renderer->removeDrawable(it->second,true);
-        scene->remDrawable(it->second);
+        renderer->removeDrawable(draw, true, renderer->teardownInfo);
+        scene->remDrawable(draw);
     } else
-        wkLogLevel(Warn,"Missing drawable for RemDrawableReq: %llu", drawable);
+        wkLogLevel(Warn,"Missing drawable for RemDrawableReq: %llu", drawID);
 }
 
 void AddProgramReq::execute(Scene *scene,SceneRenderer *renderer,WhirlyKit::View *view)
@@ -570,7 +691,7 @@ void AddProgramReq::execute(Scene *scene,SceneRenderer *renderer,WhirlyKit::View
 
 void RemProgramReq::execute(Scene *scene,SceneRenderer *renderer,WhirlyKit::View *view)
 {
-    scene->removeProgram(programId);
+    scene->removeProgram(programId,renderer->teardownInfo);
 }
     
 RunBlockReq::RunBlockReq(BlockFunc newFunc) : func(newFunc)
@@ -586,4 +707,19 @@ void RunBlockReq::execute(Scene *scene,SceneRenderer *renderer,WhirlyKit::View *
     func(scene,renderer,view);
 }
     
+SetZoomSlotReq::SetZoomSlotReq(int zoomSlot,float zoomVal)
+: zoomSlot(zoomSlot), zoomVal(zoomVal)
+{
+}
+
+void SetZoomSlotReq::execute(Scene *scene,SceneRenderer *renderer,View *view)
+{
+    if (zoomVal == MAXFLOAT)
+        scene->releaseZoomSlot(zoomSlot);
+    else
+        scene->setZoomSlotValue(zoomSlot, zoomVal);
+}
+
+
+
 }

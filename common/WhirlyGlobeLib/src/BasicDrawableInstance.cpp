@@ -29,7 +29,7 @@ namespace WhirlyKit
 {
 
 BasicDrawableInstance::BasicDrawableInstance(const std::string &name)
-: Drawable(name), instanceTexSource(EmptyIdentity), instanceTexProg(EmptyIdentity)
+: Drawable(name), instanceTexSource(EmptyIdentity), instanceTexProg(EmptyIdentity), valuesChanged(true), texturesChanged(true)
 {
 }
     
@@ -78,8 +78,13 @@ SimpleIdentity BasicDrawableInstance::getProgram() const
     return basicDraw->getProgram();
 }
     
-    void BasicDrawableInstance::setProgram(SimpleIdentity progID)
+void BasicDrawableInstance::setProgram(SimpleIdentity progID)
 {
+    if (programID == progID)
+        return;
+    
+    setValuesChanged();
+    
     programID = progID;
 }
 
@@ -115,11 +120,27 @@ bool BasicDrawableInstance::isOn(WhirlyKit::RendererFrameInfo *frameInfo) const
             return false;
     }
     
+    // Zoom based check.  We need to be in the current zoom range
+    if (zoomSlot > -1 && zoomSlot <= MaplyMaxZoomSlots) {
+        float zoom = frameInfo->scene->getZoomSlotValue(zoomSlot);
+        if (zoom != MAXFLOAT) {
+            if (minZoomVis != DrawVisibleInvalid && zoom < minZoomVis)
+                return false;
+            if (maxZoomVis != DrawVisibleInvalid && zoom >= maxZoomVis)
+                return false;
+        }
+    }
+    
     return true;
 }
     
 void BasicDrawableInstance::setRequestZBuffer(bool val)
 {
+    if (requestZBuffer == val)
+        return;
+    
+    setValuesChanged();
+
     requestZBuffer = val;
 }
     
@@ -130,6 +151,11 @@ bool BasicDrawableInstance::getRequestZBuffer() const
     
 void BasicDrawableInstance::setWriteZBuffer(bool val)
 {
+    if (writeZBuffer == val)
+        return;
+    
+    setValuesChanged();
+
     writeZBuffer = val;
 }
     
@@ -175,21 +201,48 @@ void BasicDrawableInstance::setViewerVisibility(double inMinViewerDist,double in
     minViewerDist = inMinViewerDist; maxViewerDist = inMaxViewerDist; viewerCenter = inViewerCenter;
 }
 
+void BasicDrawableInstance::setZoomInfo(int inZoomSlot,double inMinZoomVis,double inMaxZoomVis)
+{
+    if (zoomSlot == inZoomSlot && minZoomVis == inMinZoomVis && maxZoomVis == inMaxZoomVis)
+        return;
+    
+    setValuesChanged();
+    
+    zoomSlot = inZoomSlot;
+    minZoomVis = inMinZoomVis;
+    maxZoomVis = inMaxZoomVis;
+}
+
 /// Set the color
 void BasicDrawableInstance::setColor(RGBAColor inColor)
 {
+    if (hasColor && color == inColor)
+        return;
+    
+    setValuesChanged();
+
     hasColor = true; color = inColor;
 }
 
 /// Set the draw priority
 void BasicDrawableInstance::setDrawPriority(int newPriority)
 {
+    if (hasDrawPriority && drawPriority == newPriority)
+        return;
+    
+    setValuesChanged();
+
     hasDrawPriority = true;  drawPriority = newPriority;
 }
 
 /// Set the line width
 void BasicDrawableInstance::setLineWidth(int newLineWidth)
 {
+    if (hasLineWidth && lineWidth == newLineWidth)
+        return;
+    
+    setValuesChanged();
+
     hasLineWidth = true;  lineWidth = newLineWidth;
 }
     
@@ -201,6 +254,8 @@ void BasicDrawableInstance::setStartTime(TimeInterval inStartTime)
 void BasicDrawableInstance::setUniforms(const SingleVertexAttributeSet &newUniforms)
 {
     uniforms = newUniforms;
+    
+    setValuesChanged();
 }
     
 void BasicDrawableInstance::setUniBlock(const BasicDrawable::UniformBlock &uniBlock)
@@ -226,37 +281,78 @@ SimpleIdentity BasicDrawableInstance::getRenderTarget() const
 
 void BasicDrawableInstance::setRenderTarget(SimpleIdentity newRenderTarget)
 {
+    if (renderTargetID == newRenderTarget)
+        return;
+    
+    setValuesChanged();
+
     renderTargetID = newRenderTarget;
 }
 
 void BasicDrawableInstance::setTexId(unsigned int which,SimpleIdentity inId)
 {
-    if (which < texInfo.size())
+    bool changes = false;
+    
+    if (which < texInfo.size()) {
         texInfo[which].texId = inId;
-    else {
+        changes = true;
+    } else {
         wkLogLevel(Error, "BasicDrawableInstance:setTexId() Tried to set texInfo entry that doesn't exist.");
     }
+    
+    if (changes)
+        setTexturesChanged();
 }
 
 void BasicDrawableInstance::setTexIDs(const std::vector<SimpleIdentity> &texIDs)
 {
+    bool changes = false;
+    
     for (unsigned int ii=0;ii<std::min(texInfo.size(),texIDs.size());ii++)
     {
-        texInfo[ii].texId = texIDs[ii];
+        if (texInfo[ii].texId != texIDs[ii]) {
+            texInfo[ii].texId = texIDs[ii];
+            changes = true;
+        }
     }
+
+    if (changes)
+        setTexturesChanged();
 }
 
 void BasicDrawableInstance::setTexRelative(int which,int size,int borderTexel,int relLevel,int relX,int relY)
 {
+    bool changes = false;
+    
     if (which >= texInfo.size())
-        return;
-    
+       return;
+
     TexInfo &ti = texInfo[which];
-    ti.size = size;
-    ti.borderTexel = borderTexel;
-    ti.relLevel = relLevel;
-    ti.relX = relX;
-    ti.relY = relY;
-}    
+    if (ti.size != size || ti.borderTexel != borderTexel || ti.relLevel != relLevel || ti.relX != relX || ti.relY != relY) {
+        ti.size = size;
+        ti.borderTexel = borderTexel;
+        ti.relLevel = relLevel;
+        ti.relX = relX;
+        ti.relY = relY;
+        changes = true;
+    }
+
+    if (changes)
+        setTexturesChanged();
+}
+
+void BasicDrawableInstance::setValuesChanged()
+{
+    valuesChanged = true;
+    if (renderTargetCon)
+        renderTargetCon->modified = true;
+}
     
+void BasicDrawableInstance::setTexturesChanged()
+{
+    texturesChanged = true;
+    if (renderTargetCon)
+        renderTargetCon->modified = true;
+}
+
 }

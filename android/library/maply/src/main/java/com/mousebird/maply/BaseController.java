@@ -99,6 +99,11 @@ public class BaseController implements RenderController.TaskManager, RenderContr
         return scene;
     }
 
+	/**
+	 * Return the current coordinate system.
+	 */
+	public CoordSystem getCoordSystem() { return coordAdapter.coordSys; }
+
 	public void takeScreenshot(ScreenshotListener listener)
 	{
 		if (baseView instanceof GLTextureView) {
@@ -171,6 +176,27 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 	private int lastLayerThreadReturned = 0;
 
 	/**
+	 * Utility routine to run a task on the main thread.
+	 * Doesn't do anything clever, but it does end up looking very simple
+	 * in Kotlin.
+	 */
+	public void addMainThreadTask(Runnable run) {
+		Handler handler = new Handler(activity.getMainLooper());
+		handler.post(run);
+	}
+
+	/**
+	 * Utility routine to run a task on the main thread after
+	 * a period of time.
+	 * Doesn't do anything clever, but it does end up looking very simple
+	 * in Kotlin.
+	 */
+	public void addMainThreadTaskAfter(double when,Runnable run) {
+		Handler handler = new Handler(activity.getMainLooper());
+		handler.postDelayed(run, (long)(when * 1000.0));
+	}
+
+	/**
 	 * Activity for the whole app.
      */
 	public Activity getActivity() { return activity; }
@@ -226,6 +252,11 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 		 * for slower devices.
 		 */
 		public int height = 0;
+		/**
+		 * If set, we'll use a different library name rather than the default.
+		 * Super special option.  You probably don't need that.
+		 */
+		public String loadLibraryName = null;
 	}
 
 	// Set if we're using a TextureView rather than a SurfaceView
@@ -247,7 +278,19 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 	/**
 	 * The render controller handles marshalling objects and the actual run loop.
 	 */
-	RenderController renderControl = null;
+	public RenderController renderControl = null;
+
+	/**
+	 * The underlying render controller.  Only get this if you know what it does.
+	 */
+	public RenderController getRenderController() {
+		return renderControl;
+	}
+
+	/**
+	 * Load in the shared C++ library if needed.
+	 */
+	String loadLibraryName = "whirlyglobemaply";
 
 	/**
 	 * Construct the maply controller with an Activity.  We need access to a few
@@ -266,8 +309,33 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 	{
 		// Note: Can't pull this one in anymore in Android Studio.  Hopefully not still necessary
 //		System.loadLibrary("gnustl_shared");
-		System.loadLibrary("whirlyglobemaply");
+		if (settings != null && settings.loadLibraryName != null)
+			loadLibraryName = settings.loadLibraryName;
+		System.loadLibrary(loadLibraryName);
 		libraryLoaded = true;
+
+		// These are objects that can potentially be created on the C++ side
+		//  before we create them on the Java side.  So we need to make sure their
+		//  nativeInit is called.
+		ComponentObject initObj = new ComponentObject();
+		CoordSystem initCoordSys = new CoordSystem();
+		VectorTileData initVecData = new VectorTileData();
+		Point2d initPt2d = new Point2d();
+		Point3d initPt3d = new Point3d();
+		Point4d initPt4d = new Point4d();
+		Matrix3d initMat3d = new Matrix3d();
+		Matrix4d initMat4d = new Matrix4d();
+		Quaternion initQuat = new Quaternion();
+		SelectedObject initSelObj = new SelectedObject();
+		ImageTile initImgTile = new ImageTile();
+		QIFBatchOps initBatchOps = new QIFBatchOps();
+		QIFFrameAsset initFrameAsset = new QIFFrameAsset();
+		Shader initShader = new Shader();
+		ChangeSet initChangeSet = new ChangeSet();
+		AttrDictionary initDict = new AttrDictionary();
+		AttrDictionaryEntry initEntry = new AttrDictionaryEntry();
+		VectorObject initVecObj = new VectorObject();
+
 		activity = mainActivity;
 		if (settings != null) {
 			useTextureView = !settings.useSurfaceView;
@@ -286,7 +354,7 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 		if (!libraryLoaded)
 		{
 //			System.loadLibrary("gnustl_shared");
-			System.loadLibrary("whirlyglobemaply");
+			System.loadLibrary(loadLibraryName);
 			libraryLoaded = true;
 		}
 
@@ -534,13 +602,8 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 			// This will make sure we have a valid context
 			setEGLContext(glContext);
 
-			if (renderWrapper != null)
-			     renderWrapper.stopRendering();
-
-			// Shut down the tile fetchers
-			for (RemoteTileFetcher tileFetcher : tileFetchers)
-				tileFetcher.shutdown();
-			tileFetchers.clear();
+			for (QuadSamplingLayer sampleLayer : samplingLayers)
+				sampleLayer.isShuttingDown = true;
 
 			//		Choreographer.getInstance().removeFrameCallback(this);
 			ArrayList<LayerThread> layerThreadsToRemove = null;
@@ -554,6 +617,14 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 					layerThreads.clear();
 				}
 			}
+
+			// Shut down the tile fetchers
+			for (RemoteTileFetcher tileFetcher : tileFetchers)
+				tileFetcher.shutdown();
+			tileFetchers.clear();
+
+			if (renderWrapper != null)
+				renderWrapper.stopRendering();
 
 			if (metroThread != null) {
 				metroThread.shutdown();
@@ -1105,7 +1176,7 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 	 * Sampling layers can be shared for efficiency.  Don't be calling this yourself.
 	 * The loaders do it for you.
 	 */
-	QuadSamplingLayer findSamplingLayer(SamplingParams params,final QuadSamplingLayer.ClientInterface user)
+	public QuadSamplingLayer findSamplingLayer(SamplingParams params,final QuadSamplingLayer.ClientInterface user)
 	{
 		QuadSamplingLayer theLayer = null;
 
@@ -1144,7 +1215,7 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 	 * @param samplingLayer
 	 * @param user
 	 */
-	void releaseSamplingLayer(final QuadSamplingLayer samplingLayer,final QuadSamplingLayer.ClientInterface user)
+	public void releaseSamplingLayer(final QuadSamplingLayer samplingLayer,final QuadSamplingLayer.ClientInterface user)
 	{
 		if (!samplingLayers.contains(samplingLayer))
 			return;
@@ -1561,9 +1632,11 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 		Point2d frameLoc = new Point2d(scale.getX()*screenLoc.getX(),scale.getY()*screenLoc.getY());
 
 		// Ask the selection manager
-		SelectedObject selManObjs[] = renderControl.selectionManager.pickObjects(renderControl.componentManager,view.makeViewState(renderControl), frameLoc);
+		ViewState theViewState = view.makeViewState(renderControl);
+		SelectedObject selManObjs[] = renderControl.selectionManager.pickObjects(renderControl.componentManager,theViewState, frameLoc);
 		if (selManObjs != null)
 			renderControl.componentManager.remapSelectableObjects(selManObjs);
+		theViewState.dispose();
 
 		Point2d geoPt = geoPointFromScreen(screenLoc);
 		if (geoPt == null)
@@ -1749,6 +1822,14 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 		}
 
 		renderControl.changeRenderTarget(renderTarget,tex);
+	}
+
+	/**
+	 * Ask the render target to clear itself.
+	 */
+	public void clearRenderTarget(RenderTarget renderTarget,ThreadMode mode)
+	{
+		renderControl.clearRenderTarget(renderTarget,mode);
 	}
 
 	/** Remove the given render target from the system.
@@ -1978,8 +2059,11 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 				if (particleSystemID != RenderController.EmptyIdentity) {
 					compObj.addParticleSystemID(particleSystemID);
 				}
-				if (scene != null)
+				if (scene != null) {
 					changes.process(renderControl, scene);
+					changes.dispose();
+				}
+				renderControl.componentManager.addComponentObject(compObj);
 			}
 		};
 
@@ -2003,8 +2087,10 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 				public void run() {
 					ChangeSet changes = new ChangeSet();
 					renderControl.particleSystemManager.addParticleBatch(particleBatch.partSys.getID(), particleBatch,changes);
-					if (scene != null)
+					if (scene != null) {
 						changes.process(renderControl, scene);
+						changes.dispose();
+					}
 				}
 			};
 			addTask(run, mode);
@@ -2163,5 +2249,17 @@ public class BaseController implements RenderController.TaskManager, RenderContr
 	public void processChangeSet(ChangeSet changes)
 	{
 		changes.process(renderControl, scene);
+		changes.dispose();
+	}
+
+	/**
+	 * True if the renderer was set up as offline.
+	 * Never going to be true for this.
+	 */
+	public boolean getOfflineMode() {
+		if (renderControl != null)
+			return false;
+
+		return renderControl.getOfflineMode();
 	}
 }

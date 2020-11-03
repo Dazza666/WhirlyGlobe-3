@@ -97,7 +97,7 @@ Marker::Marker()
     height(0), width(0),
     layoutHeight(-1.0), layoutWidth(-1.0),
     rotation(0), offset(0,0), period(0),
-    timeOffset(0), layoutImportance(MAXFLOAT)
+    timeOffset(0), layoutImportance(MAXFLOAT), orderBy(-1)
 {
 }
 
@@ -194,6 +194,9 @@ SimpleIdentity MarkerManager::addMarkers(const std::vector<Marker *> &markers,co
             if (!marker->uniqueID.empty() && layoutObj)
                 layoutObj->uniqueID = marker->uniqueID;
 
+            if (marker->orderBy >= 0)
+                shape->setOrderBy(marker->orderBy);
+
             shape->setPeriod(marker->period);
             
             ScreenSpaceObject::ConvexGeometry smGeom;
@@ -213,7 +216,7 @@ SimpleIdentity MarkerManager::addMarkers(const std::vector<Marker *> &markers,co
                 shape->setId(marker->selectID);
             shape->setWorldLoc(coordAdapter->localToDisplay(localPt));
             if (marker->hasMotion)
-                shape->setMovingLoc(coordAdapter->getCoordSystem()->geographicToLocal3d(marker->endLoc), marker->startTime, marker->endTime);
+                shape->setMovingLoc(coordAdapter->localToDisplay(coordAdapter->getCoordSystem()->geographicToLocal3d(marker->endLoc)), marker->startTime, marker->endTime);
             if (marker->lockRotation)
                 shape->setRotation(marker->rotation);
             if (markerInfo.fadeIn > 0.0)
@@ -221,6 +224,10 @@ SimpleIdentity MarkerManager::addMarkers(const std::vector<Marker *> &markers,co
             else if (markerInfo.fadeOut > 0.0 && markerInfo.fadeOutTime > 0.0)
                 shape->setFade(markerInfo.fadeOutTime, markerInfo.fadeOutTime+markerInfo.fadeOut);
             shape->setVisibility(markerInfo.minVis, markerInfo.maxVis);
+            shape->setZoomInfo(markerInfo.zoomSlot, markerInfo.minZoomVis, markerInfo.maxZoomVis);
+            shape->setOpacityExp(markerInfo.opacityExp);
+            shape->setColorExp(markerInfo.colorExp);
+            shape->setScaleExp(markerInfo.scaleExp);
             shape->setDrawPriority(markerInfo.drawPriority);
             shape->setEnable(markerInfo.enable);
             if (markerInfo.startEnable != markerInfo.endEnable)
@@ -360,8 +367,7 @@ SimpleIdentity MarkerManager::addMarkers(const std::vector<Marker *> &markers,co
     }
 
     // Flush out any drawables for the static geometry
-    for (DrawableMap::iterator it = drawables.begin();
-         it != drawables.end(); ++it)
+    for (auto it = drawables.begin(); it != drawables.end(); ++it)
     {
         if (markerInfo.fadeIn > 0.0)
         {
@@ -376,11 +382,9 @@ SimpleIdentity MarkerManager::addMarkers(const std::vector<Marker *> &markers,co
     if (!screenShapes.empty())
     {
         ScreenSpaceBuilder ssBuild(renderer,coordAdapter,renderer->getScale());
+        ssBuild.addScreenObjects(screenShapes);
         for (unsigned int ii=0;ii<screenShapes.size();ii++)
-        {
-            ssBuild.addScreenObject(*(screenShapes[ii]));
             delete screenShapes[ii];
-        }
         ssBuild.flushChanges(changes, markerRep->drawIDs);
     }
     

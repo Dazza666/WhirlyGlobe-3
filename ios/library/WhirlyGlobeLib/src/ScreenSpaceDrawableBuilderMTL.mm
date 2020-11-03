@@ -24,34 +24,11 @@
 
 namespace WhirlyKit
 {
-
-void ScreenSpaceTweakerMTL::tweakForFrame(Drawable *inDraw,RendererFrameInfo *inFrameInfo)
+    
+ScreenSpaceDrawableBuilderMTL::ScreenSpaceDrawableBuilderMTL(const std::string &name,Scene *scene)
+    : BasicDrawableBuilderMTL(name,scene)
 {
-    if (inFrameInfo->sceneRenderer->getType() != SceneRenderer::RenderMetal || !inFrameInfo->program)
-        return;
-    BasicDrawable *basicDraw = dynamic_cast<BasicDrawable *>(inDraw);
-    RendererFrameInfoMTL *frameInfo = (RendererFrameInfoMTL *)inFrameInfo;
-
-    Point2f fbSize = frameInfo->sceneRenderer->getFramebufferSize();
-    
-    WhirlyKitShader::UniformScreenSpace uniSS;
-    bzero(&uniSS,sizeof(uniSS));
-    uniSS.scale[0] = 2.f/fbSize.x();
-    uniSS.scale[1] = 2.f/fbSize.y();
-    uniSS.keepUpright = keepUpright;
-    uniSS.time = frameInfo->currentTime - startTime;
-    uniSS.activeRot = activeRot;
-    uniSS.hasMotion = motion;
-    
-    BasicDrawable::UniformBlock uniBlock;
-    uniBlock.blockData = RawDataRef(new RawNSDataReader([[NSData alloc] initWithBytes:&uniSS length:sizeof(uniSS)]));
-    uniBlock.bufferID = WKSUniformDrawStateScreenSpaceBuffer;
-    basicDraw->setUniBlock(uniBlock);
-}
-    
-ScreenSpaceDrawableBuilderMTL::ScreenSpaceDrawableBuilderMTL(const std::string &name)
-    : BasicDrawableBuilderMTL(name)
-{
+    this->scene = scene;
 }
 
 void ScreenSpaceDrawableBuilderMTL::Init(bool hasMotion,bool hasRotation,bool buildAnyway)
@@ -65,14 +42,14 @@ void ScreenSpaceDrawableBuilderMTL::Init(bool hasMotion,bool hasRotation,bool bu
     
     // Wire up the buffers
     // TODO: Merge these into a single data structure
-    ((VertexAttributeMTL *)basicDraw->vertexAttributes[offsetIndex])->bufferIndex = WKSVertexScreenSpaceOffsetAttribute;
-    ((VertexAttributeMTL *)basicDraw->vertexAttributes[rotIndex])->bufferIndex = WKSVertexScreenSpaceRotAttribute;
-    ((VertexAttributeMTL *)basicDraw->vertexAttributes[dirIndex])->bufferIndex = WKSVertexScreenSpaceDirAttribute;
+    ((VertexAttributeMTL *)basicDraw->vertexAttributes[offsetIndex])->slot = WhirlyKitShader::WKSVertexScreenSpaceOffsetAttribute;
+    ((VertexAttributeMTL *)basicDraw->vertexAttributes[rotIndex])->slot = WhirlyKitShader::WKSVertexScreenSpaceRotAttribute;
+    ((VertexAttributeMTL *)basicDraw->vertexAttributes[dirIndex])->slot = WhirlyKitShader::WKSVertexScreenSpaceDirAttribute;
 }
 
 ScreenSpaceTweaker *ScreenSpaceDrawableBuilderMTL::makeTweaker()
 {
-    return new ScreenSpaceTweakerMTL();
+    return NULL;
 }
 
 BasicDrawable *ScreenSpaceDrawableBuilderMTL::getDrawable()
@@ -81,7 +58,40 @@ BasicDrawable *ScreenSpaceDrawableBuilderMTL::getDrawable()
         return BasicDrawableBuilderMTL::getDrawable();
     
     BasicDrawable *theDraw = BasicDrawableBuilderMTL::getDrawable();
-    setupTweaker(theDraw);
+    
+    WhirlyKitShader::UniformScreenSpace uniSS;
+    bzero(&uniSS,sizeof(uniSS));
+    uniSS.keepUpright = keepUpright;
+    if (motion) {
+        theDraw->motion = true;
+        uniSS.startTime = startTime - scene->getBaseTime();
+    } else
+        uniSS.startTime = 0.0;
+    uniSS.activeRot = rotation;
+    uniSS.hasMotion = motion;
+    uniSS.hasExp = opacityExp || colorExp || scaleExp || includeExp;
+    
+    BasicDrawable::UniformBlock uniBlock;
+    uniBlock.blockData = RawDataRef(new RawNSDataReader([[NSData alloc] initWithBytes:&uniSS length:sizeof(uniSS)]));
+    uniBlock.bufferID = WhirlyKitShader::WKSUniformScreenSpaceEntry;
+    theDraw->setUniBlock(uniBlock);
+
+    // Expression uniforms, if present
+    if (uniSS.hasExp) {
+        WhirlyKitShader::UniformScreenSpaceExp ssExp;
+        memset(&ssExp, 0, sizeof(ssExp));
+        if (scaleExp)
+            FloatExpressionToMtl(scaleExp,ssExp.scaleExp);
+        if (opacityExp)
+            FloatExpressionToMtl(opacityExp,ssExp.opacityExp);
+        if (colorExp)
+            ColorExpressionToMtl(colorExp,ssExp.colorExp);
+
+        BasicDrawable::UniformBlock uniBlock;
+        uniBlock.blockData = RawDataRef(new RawNSDataReader([[NSData alloc] initWithBytes:&ssExp length:sizeof(ssExp)]));
+        uniBlock.bufferID = WhirlyKitShader::WKSUniformScreenSpaceEntryExp;
+        basicDraw->setUniBlock(uniBlock);
+    }
     
     return theDraw;
 }

@@ -26,6 +26,7 @@
 #import "TextureAtlas.h"
 #import "ScreenSpaceDrawableBuilder.h"
 #import "Scene.h"
+#import "BaseInfo.h"
 
 namespace WhirlyKit
 {
@@ -64,9 +65,14 @@ public:
         TimeInterval startEnable,endEnable;
         int drawPriority;
         float minVis,maxVis;
+        int zoomSlot;
+        double minZoomVis,maxZoomVis;
         bool motion;
         bool rotation;
         bool keepUpright;
+        FloatExpressionInfoRef opacityExp;
+        ColorExpressionInfoRef colorExp;
+        FloatExpressionInfoRef scaleExp;
         SingleVertexAttributeInfoSet vertexAttrs;
     };
     
@@ -85,6 +91,14 @@ public:
     void setDrawPriority(int drawPriority);
     /// Set the visibility range
     void setVisibility(float minVis,float maxVis);
+    /// Set enable based on zoom
+    void setZoomInfo(int zoomSlot,double minZoomVis,double maxZoomVis);
+    /// Set the opacity function if we have one
+    void setOpacityExp(FloatExpressionInfoRef opacityExp);
+    /// Set the color function if there is one
+    void setColorExp(ColorExpressionInfoRef colorExp);
+    /// Set the size function if there is one
+    void setScaleExp(FloatExpressionInfoRef sizeExp);
     /// Set the start enable
     void setEnable(bool enable);
     /// Set the enable time range
@@ -96,7 +110,9 @@ public:
     void addRectangle(const Point3d &worldLoc,double rotation,bool keepUpright,const Point2d *coord,const TexCoord *texCoords,const RGBAColor &color);
 
     /// Add a whole bunch of predefined Scene Objects
+    /// These will be sorted by orderBy
     void addScreenObjects(std::vector<ScreenSpaceObject> &screenObjects);
+    void addScreenObjects(std::vector<ScreenSpaceObject *> &screenObjects);
     
     /// Add a single screen space object
     void addScreenObject(const ScreenSpaceObject &screenObject);
@@ -196,6 +212,10 @@ public:
     void setEnable(bool enable);
     void setEnableTime(TimeInterval startEnable,TimeInterval endEnable);
     void setVisibility(float minVis,float maxVis);
+    void setZoomInfo(int zoomSlot,double minZoomVis,double maxZoomVis);
+    void setOpacityExp(FloatExpressionInfoRef opacityExp);
+    void setColorExp(ColorExpressionInfoRef colorExp);
+    void setScaleExp(FloatExpressionInfoRef scaleExp);
     void setDrawPriority(int drawPriority);
     int getDrawPriority();
     void setKeepUpright(bool keepUpright);
@@ -205,6 +225,7 @@ public:
     void setFade(TimeInterval fadeUp,TimeInterval fadeDown);
     void setOffset(const Point2d &offset);
     void setPeriod(TimeInterval period);
+    void setOrderBy(long orderBy);
     
     void addGeometry(const ConvexGeometry &geom);
     std::vector<ConvexGeometry> getGeometry() const { return geometry; }
@@ -219,6 +240,7 @@ protected:
     TimeInterval startTime,endTime;
     Point2d offset;
     double rotation;
+    long orderBy;
     bool keepUpright;
     ScreenSpaceBuilder::DrawableState state;
     std::vector<ConvexGeometry> geometry;

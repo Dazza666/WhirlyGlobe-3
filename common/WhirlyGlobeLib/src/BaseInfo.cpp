@@ -30,10 +30,45 @@ using namespace Eigen;
 namespace WhirlyKit
 {
 
+ExpressionInfo::ExpressionInfo()
+: type(ExpressionNone), base(1.0)
+{
+}
+
+ExpressionInfo::ExpressionInfo(const ExpressionInfo &that)
+: type(that.type), base(that.base), stopInputs(that.stopInputs)
+{
+}
+
+FloatExpressionInfo::FloatExpressionInfo()
+{
+}
+
+FloatExpressionInfo::FloatExpressionInfo(const FloatExpressionInfo &that)
+: ExpressionInfo(that), stopOutputs(that.stopOutputs)
+{
+}
+
+void FloatExpressionInfo::scaleBy(double scale)
+{
+    for (unsigned int ii=0;ii<stopOutputs.size();ii++)
+        stopOutputs[ii] *= scale;
+}
+
+ColorExpressionInfo::ColorExpressionInfo()
+{
+}
+
+ColorExpressionInfo::ColorExpressionInfo(const ColorExpressionInfo &that)
+: ExpressionInfo(that), stopOutputs(that.stopOutputs)
+{
+}
+
 BaseInfo::BaseInfo()
     : minVis(DrawVisibleInvalid), maxVis(DrawVisibleInvalid),
     minVisBand(DrawVisibleInvalid), maxVisBand(DrawVisibleInvalid),
     minViewerDist(DrawVisibleInvalid), maxViewerDist(DrawVisibleInvalid),
+    zoomSlot(-1),minZoomVis(DrawVisibleInvalid),maxZoomVis(DrawVisibleInvalid),
     viewerCenter(DrawVisibleInvalid,DrawVisibleInvalid,DrawVisibleInvalid),
     drawOffset(0.0),
     drawPriority(0),
@@ -43,7 +78,22 @@ BaseInfo::BaseInfo()
     programID(EmptyIdentity),
     extraFrames(0),
     zBufferRead(false), zBufferWrite(false),
-    renderTargetID(EmptyIdentity)
+    renderTargetID(EmptyIdentity),
+    hasExp(false)
+{
+}
+
+BaseInfo::BaseInfo(const BaseInfo &that)
+: minVis(that.minVis), maxVis(that.minVis), minVisBand(that.minVisBand), maxVisBand(that.maxVisBand),
+  minViewerDist(that.minViewerDist), maxViewerDist(that.maxViewerDist),
+  zoomSlot(that.zoomSlot),minZoomVis(that.minZoomVis),maxZoomVis(that.maxZoomVis),
+  viewerCenter(that.viewerCenter),
+  drawOffset(that.drawOffset), drawPriority(that.drawPriority), enable(that.enable),
+  fade(that.fade), fadeIn(that.fadeIn), fadeOut(that.fadeOut), fadeOutTime(that.fadeOutTime),
+  startEnable(that.startEnable), endEnable(that.endEnable), programID(that.programID),
+  extraFrames(that.extraFrames), zBufferRead(that.zBufferRead), zBufferWrite(that.zBufferWrite),
+  renderTargetID(that.renderTargetID),
+    hasExp(that.hasExp)
 {
 }
     
@@ -55,6 +105,9 @@ BaseInfo::BaseInfo(const Dictionary &dict)
     maxVisBand = dict.getDouble(MaplyMaxVisBand,DrawVisibleInvalid);
     minViewerDist = dict.getDouble(MaplyMinViewerDist,DrawVisibleInvalid);
     maxViewerDist = dict.getDouble(MaplyMaxViewerDist,DrawVisibleInvalid);
+    zoomSlot = dict.getInt(MaplyZoomSlot,-1);
+    minZoomVis = dict.getDouble(MaplyMinZoomVis,DrawVisibleInvalid);
+    maxZoomVis = dict.getDouble(MaplyMaxZoomVis,DrawVisibleInvalid);
     viewerCenter.x() = dict.getDouble(MaplyViewableCenterX,DrawVisibleInvalid);
     viewerCenter.y() = dict.getDouble(MaplyViewableCenterY,DrawVisibleInvalid);
     viewerCenter.z() = dict.getDouble(MaplyViewableCenterZ,DrawVisibleInvalid);
@@ -76,6 +129,7 @@ BaseInfo::BaseInfo(const Dictionary &dict)
     zBufferRead = dict.getBool(MaplyZBufferRead,false);
     zBufferWrite = dict.getBool(MaplyZBufferWrite, false);
     renderTargetID = dict.getInt(MaplyRenderTargetDesc,EmptyIdentity);
+    hasExp = false;
 
     // Note: Porting
     // Uniforms to be passed to shader
@@ -134,6 +188,9 @@ std::string BaseInfo::toString()
     " maxVisBand = " + to_string(maxVisBand) + ";" +
     " minViewerDist = " + to_string(minViewerDist) + ";" +
     " maxViewerDist = " + to_string(maxViewerDist) + ";" +
+    " zoomSlot = " + to_string(zoomSlot) + ";" +
+    " minZoomVis = " + to_string(minZoomVis) + ";" +
+    " maxZoomVis = " + to_string(maxZoomVis) + ";" +
     " viewerCenter = (" + to_string(viewerCenter.x()) + "," + to_string(viewerCenter.y()) + "," + to_string(viewerCenter.z()) + ");" +
     " drawOffset = " + to_string(drawOffset) + ";" +
     " drawPriority = " + to_string(drawPriority) + ";" +
@@ -162,6 +219,7 @@ void BaseInfo::setupBasicDrawable(BasicDrawableBuilder *drawBuild) const
     drawBuild->setDrawPriority(drawPriority);
     drawBuild->setVisibleRange(minVis,maxVis);
     drawBuild->setViewerVisibility(minViewerDist,maxViewerDist,viewerCenter);
+    drawBuild->setZoomInfo(zoomSlot,minZoomVis,maxZoomVis);
     drawBuild->setProgram(programID);
     drawBuild->setUniforms(uniforms);
     drawBuild->setRequestZBuffer(zBufferRead);
@@ -170,6 +228,8 @@ void BaseInfo::setupBasicDrawable(BasicDrawableBuilder *drawBuild) const
     drawBuild->setExtraFrames(extraFrames);
     if (renderTargetID != EmptyIdentity)
         drawBuild->setRenderTarget(renderTargetID);
+    if (hasExp)
+        drawBuild->setIncludeExp(true);
 }
 
 void BaseInfo::setupBasicDrawableInstance(BasicDrawableInstanceBuilderRef drawBuild) const
@@ -184,12 +244,15 @@ void BaseInfo::setupBasicDrawableInstance(BasicDrawableInstanceBuilder *drawBuil
     drawBuild->setDrawPriority(drawPriority);
     drawBuild->setVisibleRange(minVis,maxVis);
     drawBuild->setViewerVisibility(minViewerDist,maxViewerDist,viewerCenter);
+    drawBuild->setZoomInfo(zoomSlot,minZoomVis,maxZoomVis);
     drawBuild->setUniforms(uniforms);
     drawBuild->setRequestZBuffer(zBufferRead);
     drawBuild->setWriteZBuffer(zBufferWrite);
     drawBuild->setProgram(programID);
     if (renderTargetID != EmptyIdentity)
         drawBuild->setRenderTarget(renderTargetID);
+//    if (hasExp)
+//        drawBuild->setIncludeExp(true);
 }
     
 }

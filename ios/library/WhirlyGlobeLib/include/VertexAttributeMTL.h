@@ -23,6 +23,7 @@
 
 namespace WhirlyKit
 {
+class BufferEntryMTL;
     
 // Metal wrapper around vertex attribute
 class VertexAttributeMTL : public VertexAttribute
@@ -37,11 +38,8 @@ public:
     // Low level data type
     MTLVertexFormat formatMTL() const;
 public:
-    // Buffer ID in the shader
-    int bufferIndex;
-    
     // If set, the Metal buffer we've set up for this one
-    id<MTLBuffer> buffer;
+    BufferEntryMTL buffer;
 };
 
 class SingleVertexAttributeInfoMTL : public SingleVertexAttributeInfo

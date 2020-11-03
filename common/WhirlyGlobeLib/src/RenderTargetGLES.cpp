@@ -100,9 +100,9 @@ bool RenderTargetGLES::init(SceneRenderer *inRenderer,Scene *scene,SimpleIdentit
     
 bool RenderTargetGLES::setTargetTexture(SceneRenderer *sceneRender,Scene *scene,SimpleIdentity targetTexID)
 {
-    TextureBase *tex = scene->getTexture(targetTexID);
+    TextureBaseRef tex = scene->getTexture(targetTexID);
     if (tex)
-        setTargetTexture(tex);
+        setTargetTexture(tex.get());
     
     return tex != NULL;
 }
@@ -141,6 +141,8 @@ RawDataRef RenderTargetGLES::snapshot()
     int len = width * height * sizeof(GLubyte) * 4;
     GLubyte* pixels = (GLubyte*) malloc(len);
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+    CheckGLError("RenderTargetGLES::snapshot: glReadPixels");
     
     RawDataWrapper *rawData = new RawDataWrapper(pixels,len,true);
     

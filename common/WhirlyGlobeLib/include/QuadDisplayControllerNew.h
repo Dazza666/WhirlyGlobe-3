@@ -56,6 +56,9 @@ public:
     /// Return the maximum quad tree zoom level.  Must be at least minZoom
     virtual int getMaxZoom() = 0;
     
+    /// Max zoom level that we want to report (for continuous zoom and enable)
+    virtual int getReportedMaxZoom() = 0;
+    
     /// Return an importance value for the given tile
     virtual double importanceForTile(const QuadTreeIdentifier &ident,
                                              const Mbr &mbr,
@@ -86,7 +89,8 @@ public:
     
     /// Load some tiles, unload others, and the rest had their importance values change
     /// Return the nodes we wanted to keep rather than delete
-    virtual QuadTreeNew::NodeSet quadLoaderUpdate(const WhirlyKit::QuadTreeNew::ImportantNodeSet &loadTiles,
+    virtual QuadTreeNew::NodeSet quadLoaderUpdate(PlatformThreadInfo *threadInfo,
+                                                  const WhirlyKit::QuadTreeNew::ImportantNodeSet &loadTiles,
                                                   const WhirlyKit::QuadTreeNew::NodeSet &unloadTiles,
                                                   const WhirlyKit::QuadTreeNew::ImportantNodeSet &updateTiles,
                                                   int targetLevel,
@@ -96,7 +100,7 @@ public:
     virtual void quadLoaderPreSceenFlush(ChangeSet &changes) = 0;
     
     /// Called when a layer is shutting down (on the layer thread)
-    virtual void quadLoaderShutdown(ChangeSet &changes) = 0;
+    virtual void quadLoaderShutdown(PlatformThreadInfo *threadInfo,ChangeSet &changes) = 0;
     
 protected:
     QuadDisplayControllerNew *control;
@@ -145,6 +149,9 @@ public:
     std::vector<double> getMinImportancePerLevel();
     void setMinImportancePerLevel(const std::vector<double> &imports);
     
+    /// Return the allocated zoom slot (for tracking continuous zoom)
+    int getZoomSlot();
+    
     /// Return the geometry information being used
     QuadDataStructure *getDataStructure();
     
@@ -155,11 +162,11 @@ public:
     virtual void start();
     
     // Called when the layer thread is tearing down
-    virtual void stop(ChangeSet &changes);
+    virtual void stop(PlatformThreadInfo *threadInfo,ChangeSet &changes);
     
     // Called when the view updates.  Does the heavy lifting.
     // Returns true if it wants to be called again in a bit
-    virtual bool viewUpdate(ViewStateRef viewState,ChangeSet &changes);
+    virtual bool viewUpdate(PlatformThreadInfo *threadInfo,ViewStateRef viewState,ChangeSet &changes);
     
     // Called right before we flush the layer thread changes to the scene
     virtual void preSceneFlush(ChangeSet &changes);
@@ -178,7 +185,8 @@ protected:
     Mbr mbr;
     int maxTiles;
     std::vector<double> minImportancePerLevel;
-    int minZoom,maxZoom;
+    std::vector<double> reportedMinImportancePerLevel;
+    int minZoom,maxZoom,reportedMaxZoom;
     TimeInterval viewUpdatePeriod;
     bool keepMinLevel;
     double keepMinLevelHeight;
@@ -186,6 +194,10 @@ protected:
     std::vector<int> levelLoads;
 
     QuadTreeNew::ImportantNodeSet currentNodes;
+    
+    float lastTargetLevel;   // For tracking continuous zoom
+    float lastTargetDecimal; 
+    int zoomSlot;
 
     ViewStateRef viewState;
 };

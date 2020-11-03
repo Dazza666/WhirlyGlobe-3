@@ -25,43 +25,19 @@
 namespace WhirlyKit
 {
     
-BillboardTweakerMTL::BillboardTweakerMTL()
-: groundMode(false)
-{
-}
-    
-void BillboardTweakerMTL::tweakForFrame(Drawable *inDraw,RendererFrameInfo *inFrameInfo)
-{
-    RendererFrameInfoMTL *frameInfo = (RendererFrameInfoMTL *)inFrameInfo;
-    BasicDrawable *basicDraw = dynamic_cast<BasicDrawable *>(inDraw);
-    if (!basicDraw)
-        return;
-
-    WhirlyKitShader::UniformBillboard uniBB;
-    bzero(&uniBB,sizeof(uniBB));
-    uniBB.groundMode = groundMode;
-    CopyIntoMtlFloat3(uniBB.eyeVec, frameInfo->eyeVec);
-    
-    // Change the uniforms this frame
-    // Note: There are other ways to do this
-    BasicDrawable::UniformBlock uniBlock;
-    uniBlock.blockData = RawDataRef(new RawNSDataReader([[NSData alloc] initWithBytes:&uniBB length:sizeof(uniBB)]));
-    uniBlock.bufferID = WKSUniformDrawStateBillboardBuffer;
-    basicDraw->setUniBlock(uniBlock);
-}
-
-BillboardDrawableBuilderMTL::BillboardDrawableBuilderMTL(const std::string &name)
-    : BasicDrawableBuilderMTL(name)
+BillboardDrawableBuilderMTL::BillboardDrawableBuilderMTL(const std::string &name,Scene *scene)
+    : BasicDrawableBuilderMTL(name,scene)
 {
     Init();
 }
     
 void BillboardDrawableBuilderMTL::Init()
 {
+    basicDraw = new BasicDrawableMTL("Billboard");
     BillboardDrawableBuilder::Init();
     
     // Wire up the buffers we use
-    ((VertexAttributeMTL *)basicDraw->vertexAttributes[offsetIndex])->bufferIndex = WKSVertexBillboardOffsetAttribute;
+    ((VertexAttributeMTL *)basicDraw->vertexAttributes[offsetIndex])->slot = WhirlyKitShader::WKSVertexBillboardOffsetAttribute;
 }
     
 BasicDrawable *BillboardDrawableBuilderMTL::getDrawable()
@@ -70,9 +46,14 @@ BasicDrawable *BillboardDrawableBuilderMTL::getDrawable()
         return BasicDrawableBuilderMTL::getDrawable();
     
     BasicDrawable *theDraw = BasicDrawableBuilderMTL::getDrawable();
-    BillboardTweakerMTL *tweak = new BillboardTweakerMTL();
-    tweak->groundMode = groundMode;
-    theDraw->addTweaker(DrawableTweakerRef(tweak));
+
+    WhirlyKitShader::UniformBillboard uniBB;
+    bzero(&uniBB,sizeof(uniBB));
+    uniBB.groundMode = groundMode;
+    BasicDrawable::UniformBlock uniBlock;
+    uniBlock.blockData = RawDataRef(new RawNSDataReader([[NSData alloc] initWithBytes:&uniBB length:sizeof(uniBB)]));
+    uniBlock.bufferID = WhirlyKitShader::WKSUniformBillboardEntry;
+    basicDraw->setUniBlock(uniBlock);
     
     return theDraw;
 }

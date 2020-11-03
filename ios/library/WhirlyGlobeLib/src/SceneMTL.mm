@@ -48,41 +48,18 @@ id<MTLTexture> SceneMTL::getMTLTexture(SimpleIdentity texIdent)
     return ret;
 }
 
-/// Retain a buffer to release it in a few frames
-void SceneMTL::releaseBuffer(id buf)
-{
-    if (!buf)
-        return;
-    
-    std::lock_guard<std::mutex> guardLock(bufferLock);
-    buffers[WKMaxFramesInFlight-1].push_back(buf);
-}
-
-/// Do the dance to release buffers at the end of a frame
-void SceneMTL::endOfFrameBufferClear()
-{
-    std::lock_guard<std::mutex> guardLock(bufferLock);
-    buffers[0].clear();
-    for (int ii=0;ii<WKMaxFramesInFlight-1;ii++) {
-        buffers[ii] = buffers[ii+1];
-    }
-    buffers[WKMaxFramesInFlight-1].clear();
-}
-
 void SceneMTL::teardown()
 {
     for (auto it : drawables) {
         DrawableMTL *draw = dynamic_cast<DrawableMTL *>(it.second.get());
         if (draw)
-            draw->teardownForRenderer((RenderSetupInfoMTL *)setupInfo,this);
+            draw->teardownForRenderer((RenderSetupInfoMTL *)setupInfo,this,NULL);
     }
     drawables.clear();
     for (auto it : textures) {
         it.second->destroyInRenderer(setupInfo,this);
     }
     textures.clear();
-    for (auto &bufferList : buffers)
-        bufferList.clear();
 }
     
 }

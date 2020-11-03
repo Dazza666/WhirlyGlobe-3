@@ -19,9 +19,22 @@
  */
 
 #import "ChangeRequest.h"
+#import "Texture.h"
+#import "Drawable.h"
+#import "SceneRenderer.h"
 
 namespace WhirlyKit
 {
+
+void RenderTeardownInfo::destroyTexture(SceneRenderer *renderer,TextureBaseRef tex)
+{
+    tex->destroyInRenderer(renderer->getRenderSetupInfo(), renderer->getScene());
+}
+
+void RenderTeardownInfo::destroyDrawable(SceneRenderer *renderer,DrawableRef draw)
+{
+    draw->teardownForRenderer(renderer->getRenderSetupInfo(), renderer->getScene(), renderer->teardownInfo);
+}
 
 ChangeRequest::ChangeRequest() : when(0.0) { }
 
@@ -31,7 +44,7 @@ ChangeRequest::~ChangeRequest()
 
 bool ChangeRequest::needsFlush() { return false; }
 
-void ChangeRequest::setupForRenderer(const RenderSetupInfo *) { }
+void ChangeRequest::setupForRenderer(const RenderSetupInfo *,Scene *scene) { }
 
 bool ChangeRequest::needPreExecute() { return false; }
 

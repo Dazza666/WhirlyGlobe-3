@@ -21,7 +21,6 @@
 #import "WideVectorDrawableBuilder.h"
 #import "SceneRenderer.h"
 #import "FlatMath.h"
-#import "ProgramGLES.h"
 
 using namespace Eigen;
 
@@ -131,7 +130,12 @@ void WideVectorDrawableBuilder::add_c0(float val)
     c0.push_back(val);
 #endif
 }
-    
+
+void WideVectorDrawableBuilder::setWidthExpression(FloatExpressionInfoRef inWidthExp)
+{
+    widthExp = inWidthExp;
+}
+
 void WideVectorDrawableBuilder::setupTweaker(BasicDrawable *theDraw)
 {
     WideVectorTweaker *tweak = makeTweaker();

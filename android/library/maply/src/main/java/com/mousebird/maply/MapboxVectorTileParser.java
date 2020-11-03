@@ -31,6 +31,7 @@ import java.lang.ref.WeakReference;
 public class MapboxVectorTileParser
 {
     VectorStyleInterface styleDelegate = null;
+    VectorStyleWrapper vecStyleWrap = null;
     WeakReference<RenderControllerInterface> viewC;
 
     private MapboxVectorTileParser() { }
@@ -40,41 +41,21 @@ public class MapboxVectorTileParser
         styleDelegate = inStyleDelegate;
         viewC = new WeakReference<RenderControllerInterface>(inViewC);
 
-        initialise();
+        // If the style delegate is backed by a C++ object, we
+        //  can just use that directly.
+        if (inStyleDelegate instanceof MapboxVectorStyleSet) {
+            initialise(inStyleDelegate,true);
+        } else {
+            // If not, then the C++ needs to build a wrapper for it
+            VectorStyleWrapper vecStyleWrap = new VectorStyleWrapper(inStyleDelegate,inViewC);
+            initialise(vecStyleWrap,false);
+        }
     }
 
     public final static int GeomTypeUnknown = 0;
     public final static int GeomTypePoint = 1;
     public final static int GeomTypeLineString = 2;
     public final static int GeomTypePolygon = 3;
-
-    // Callback from the C++ side to decided if a layer can be skipped
-    boolean layerShouldParse(String layerName,VectorTileData tileData)
-    {
-        return styleDelegate.layerShouldDisplay(layerName,tileData.getTileID());
-    }
-
-    // Callback from the C++ side that returns a list of style IDs that match a given set of vectors
-    long[] stylesForFeature(AttrDictionary attrs,String layerName,VectorTileData tileData)
-    {
-        VectorStyle[] styles = styleDelegate.stylesForFeature(attrs,tileData.getTileID(),layerName,viewC.get());
-        long[] styleIDs = new long[styles.length];
-        int which = 0;
-        for (VectorStyle style : styles) {
-            styleIDs[which++] = style.getUuid();
-        }
-
-        return styleIDs;
-    }
-
-    // Callback from the C++ side that calls the styles to actually build objects
-    void buildForStyle(long styleID,VectorObject[] vecObjs,VectorTileData tileData) {
-        if (viewC.get() == null)
-            return;
-
-        VectorStyle style = styleDelegate.styleForUUID(styleID,viewC.get());
-        style.buildObjects(vecObjs,tileData,viewC.get());
-    }
 
     /**
      * Parse the data from a single tile.
@@ -86,10 +67,13 @@ public class MapboxVectorTileParser
      */
     public boolean parseData(byte[] data,VectorTileData tileData)
     {
-        return parseDataNative(data,tileData);
+        return parseDataNative(data, tileData);
     }
 
     native boolean parseDataNative(byte[] data,VectorTileData tileData);
+
+    /// If set, we'll parse into local coordinates as specified by the bounding box, rather than geo coords
+    native void setLocalCoords(boolean localCoords);
 
     public void finalize()
     {
@@ -100,7 +84,7 @@ public class MapboxVectorTileParser
     {
         nativeInit();
     }
-    native void initialise();
+    native void initialise(Object vectorStyleDelegate,boolean isMapboxStyle);
     native void dispose();
     private static native void nativeInit();
     protected long nativeHandle;

@@ -27,7 +27,9 @@ namespace WhirlyKit
 ScreenSpaceBuilder::DrawableState::DrawableState()
     : period(0.0), progID(EmptyIdentity), fadeUp(0.0), fadeDown(0.0),
     enable(true), startEnable(0.0), endEnable(0.0),
-    drawPriority(0), minVis(DrawVisibleInvalid), maxVis(DrawVisibleInvalid), motion(false), rotation(false), keepUpright(false)
+    drawPriority(0), minVis(DrawVisibleInvalid), maxVis(DrawVisibleInvalid),
+    zoomSlot(-1), minZoomVis(DrawVisibleInvalid), maxZoomVis(DrawVisibleInvalid),
+    motion(false), rotation(false), keepUpright(false)
 {
 }
     
@@ -45,6 +47,12 @@ bool ScreenSpaceBuilder::DrawableState::operator < (const DrawableState &that) c
         return  minVis < that.minVis;
     if (maxVis != that.maxVis)
         return  maxVis < that.maxVis;
+    if (zoomSlot != that.zoomSlot)
+        return zoomSlot < that.zoomSlot;
+    if (minZoomVis != that.minZoomVis)
+        return minZoomVis < that.minZoomVis;
+    if (maxZoomVis != that.maxZoomVis)
+        return maxZoomVis < that.maxZoomVis;
     if (fadeUp != that.fadeUp)
         return fadeUp < that.fadeUp;
     if (fadeDown != that.fadeDown)
@@ -63,6 +71,18 @@ bool ScreenSpaceBuilder::DrawableState::operator < (const DrawableState &that) c
         return keepUpright < that.keepUpright;
     if (vertexAttrs != that.vertexAttrs)
         return vertexAttrs < that.vertexAttrs;
+    SimpleIdentity opacityExp0 = opacityExp ? opacityExp->getId() : EmptyIdentity,
+                    opacityExp1 = that.opacityExp ? that.opacityExp->getId() : EmptyIdentity;
+    if (opacityExp0 != opacityExp1)
+        return opacityExp0 < opacityExp1;
+    SimpleIdentity colorExp0 = colorExp ? colorExp->getId() : EmptyIdentity,
+                    colorExp1 = that.colorExp ? that.colorExp->getId() : EmptyIdentity;
+    if (colorExp0 != colorExp1)
+        return colorExp0 < colorExp1;
+    SimpleIdentity scaleExp0 = scaleExp ? scaleExp->getId() : EmptyIdentity,
+                    scaleExp1 = that.scaleExp ? that.scaleExp->getId() : EmptyIdentity;
+    if (scaleExp0 != scaleExp1)
+        return scaleExp0 < scaleExp1;
     
     return false;
 }
@@ -84,6 +104,11 @@ ScreenSpaceBuilder::DrawableWrap::DrawableWrap(SceneRenderer *render,const Drawa
     locDraw->setDrawPriority(state.drawPriority);
     locDraw->setFade(state.fadeDown, state.fadeUp);
     locDraw->setVisibleRange(state.minVis, state.maxVis);
+    locDraw->setZoomInfo(state.zoomSlot, state.minZoomVis, state.maxZoomVis);
+    locDraw->setOpacityExpression(state.opacityExp);
+    locDraw->setColorExpression(state.colorExp);
+    locDraw->setScaleExpression(state.scaleExp);
+    // TODO: Set the opacity/color/scale from the drawable state
     locDraw->setRequestZBuffer(false);
     locDraw->setWriteZBuffer(false);
     locDraw->setVertexAttributes(state.vertexAttrs);
@@ -193,7 +218,29 @@ void ScreenSpaceBuilder::setVisibility(float minVis,float maxVis)
     curState.minVis = minVis;
     curState.maxVis = maxVis;
 }
-    
+
+void ScreenSpaceBuilder::setZoomInfo(int zoomSlot,double minZoomVis,double maxZoomVis)
+{
+    curState.zoomSlot = zoomSlot;
+    curState.minZoomVis = minZoomVis;
+    curState.maxZoomVis = maxZoomVis;
+}
+
+void ScreenSpaceBuilder::setOpacityExp(FloatExpressionInfoRef opacityExp)
+{
+    curState.opacityExp = opacityExp;
+}
+
+void ScreenSpaceBuilder::setColorExp(ColorExpressionInfoRef colorExp)
+{
+    curState.colorExp = colorExp;
+}
+
+void ScreenSpaceBuilder::setScaleExp(FloatExpressionInfoRef scaleExp)
+{
+    curState.scaleExp = scaleExp;
+}
+
 void ScreenSpaceBuilder::setEnable(bool inEnable)
 {
     curState.enable = inEnable;
@@ -271,6 +318,9 @@ void ScreenSpaceBuilder::addRectangle(const Point3d &worldLoc,double rotation,bo
 
 void ScreenSpaceBuilder::addScreenObjects(std::vector<ScreenSpaceObject> &screenObjects)
 {
+    std::sort(screenObjects.begin(),screenObjects.end(),
+                  [](const ScreenSpaceObject &a, const ScreenSpaceObject &b) {return a.orderBy < b.orderBy; });
+    
     for (unsigned int ii=0;ii<screenObjects.size();ii++)
     {
         ScreenSpaceObject &ssObj = screenObjects[ii];
@@ -279,6 +329,19 @@ void ScreenSpaceBuilder::addScreenObjects(std::vector<ScreenSpaceObject> &screen
     }
 }
     
+void ScreenSpaceBuilder::addScreenObjects(std::vector<ScreenSpaceObject *> &screenObjects)
+{
+    std::sort(screenObjects.begin(),screenObjects.end(),
+                  [](const ScreenSpaceObject *a, const ScreenSpaceObject *b) {return a->orderBy < b->orderBy; });
+
+    for (unsigned int ii=0;ii<screenObjects.size();ii++)
+    {
+        ScreenSpaceObject *ssObj = screenObjects[ii];
+        
+        addScreenObject(*ssObj);
+    }
+}
+
 void ScreenSpaceBuilder::addScreenObject(const ScreenSpaceObject &ssObj)
 {
     for (unsigned int ii=0;ii<ssObj.geometry.size();ii++)
@@ -361,7 +424,7 @@ ScreenSpaceObject::ScreenSpaceObject::ConvexGeometry::ConvexGeometry()
 }
     
 ScreenSpaceObject::ScreenSpaceObject()
-    : enable(true), startEnable(0.0), endEnable(0.0), worldLoc(0,0,0), endWorldLoc(0,0,0), startTime(0.0), endTime(0.0), offset(0,0), rotation(0), keepUpright(false)
+    : enable(true), startEnable(0.0), endEnable(0.0), worldLoc(0,0,0), endWorldLoc(0,0,0), startTime(0.0), endTime(0.0), offset(0,0), rotation(0), keepUpright(false), orderBy(-1)
 {
 }
 
@@ -424,6 +487,28 @@ void ScreenSpaceObject::setVisibility(float minVis,float maxVis)
     state.maxVis = maxVis;
 }
 
+void ScreenSpaceObject::setZoomInfo(int zoomSlot,double minZoomVis,double maxZoomVis)
+{
+    state.zoomSlot = zoomSlot;
+    state.minZoomVis = minZoomVis;
+    state.maxZoomVis = maxZoomVis;
+}
+
+void ScreenSpaceObject::setOpacityExp(FloatExpressionInfoRef opacityExp)
+{
+    state.opacityExp = opacityExp;
+}
+
+void ScreenSpaceObject::setColorExp(ColorExpressionInfoRef colorExp)
+{
+    state.colorExp = colorExp;
+}
+
+void ScreenSpaceObject::setScaleExp(FloatExpressionInfoRef scaleExp)
+{
+    state.scaleExp = scaleExp;
+}
+
 void ScreenSpaceObject::setDrawPriority(int drawPriority)
 {
     state.drawPriority = drawPriority;
@@ -454,6 +539,11 @@ void ScreenSpaceObject::setOffset(const Point2d &inOffset)
 void ScreenSpaceObject::setPeriod(TimeInterval period)
 {
     state.period = period;
+}
+
+void ScreenSpaceObject::setOrderBy(long inOrderBy)
+{
+    orderBy = inOrderBy;
 }
 
 void ScreenSpaceObject::addGeometry(const ConvexGeometry &geom)

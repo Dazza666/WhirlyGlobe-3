@@ -29,15 +29,16 @@ namespace WhirlyKit
 class ParticleSystemDrawableBuilder
 {
 public:
-    ParticleSystemDrawableBuilder(const std::string &name);
+    ParticleSystemDrawableBuilder(const std::string &name,Scene *scene);
     virtual ~ParticleSystemDrawableBuilder();
     
     // Set up our various attributes at once
     virtual void setup(const std::vector<SingleVertexAttributeInfo> &inVertAttrs,
-               const std::vector<SingleVertexAttributeInfo> &inVaryAttrs,
-               int numTotalPoints,
+                       const std::vector<SingleVertexAttributeInfo> &inVaryAttrs,
+                       const std::vector<SimpleIdentity> &inVaryNames,
+                       int numTotalPoints,
                        int batchSize,
-                       int vertesSize,
+                       int vertexSize,
                        bool useRectangles,
                        bool useInstancing);
 
@@ -45,6 +46,7 @@ public:
     virtual ParticleSystemDrawable *getDrawable() = 0;
 
 protected:
+    Scene *scene;
     std::string name;
     ParticleSystemDrawable *draw;
 };

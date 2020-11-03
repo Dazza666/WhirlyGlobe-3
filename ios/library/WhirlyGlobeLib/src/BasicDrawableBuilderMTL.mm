@@ -21,14 +21,15 @@
 #import <MetalKit/MetalKit.h>
 #import "BasicDrawableBuilderMTL.h"
 #import "DefaultShadersMTL.h"
+#import "RawData_NSData.h"
 
 using namespace Eigen;
 
 namespace WhirlyKit
 {
 
-BasicDrawableBuilderMTL::BasicDrawableBuilderMTL(const std::string &name)
-    : BasicDrawableBuilder(name), drawableGotten(false)
+BasicDrawableBuilderMTL::BasicDrawableBuilderMTL(const std::string &name,Scene *scene)
+    : BasicDrawableBuilder(name,scene), drawableGotten(false)
 {
     basicDraw = new BasicDrawableMTL(name);
     BasicDrawableBuilder::Init();
@@ -39,13 +40,13 @@ void BasicDrawableBuilderMTL::setupStandardAttributes(int numReserve)
 {
     basicDraw->colorEntry = addAttribute(BDChar4Type,a_colorNameID);
     VertexAttributeMTL *colorAttr = (VertexAttributeMTL *)basicDraw->vertexAttributes[basicDraw->colorEntry];
-    colorAttr->bufferIndex = WKSVertexColorAttribute;
+    colorAttr->slot = WhirlyKitShader::WKSVertexColorAttribute;
     colorAttr->setDefaultColor(RGBAColor(255,255,255,255));
     colorAttr->reserve(numReserve);
     
     basicDraw->normalEntry = addAttribute(BDFloat3Type,a_normalNameID);
     VertexAttributeMTL *normalAttr = (VertexAttributeMTL *)basicDraw->vertexAttributes[basicDraw->normalEntry];
-    normalAttr->bufferIndex = WKSVertexNormalAttribute;
+    normalAttr->slot = WhirlyKitShader::WKSVertexNormalAttribute;
     normalAttr->setDefaultVector3f(Vector3f(1.0,1.0,1.0));
     normalAttr->reserve(numReserve);
 }
@@ -56,9 +57,10 @@ BasicDrawableBuilderMTL::~BasicDrawableBuilderMTL()
         delete basicDraw;
 }
     
-int BasicDrawableBuilderMTL::addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int numThings)
+int BasicDrawableBuilderMTL::addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int slot,int numThings)
 {
     VertexAttribute *attr = new VertexAttributeMTL(dataType,nameID);
+    attr->slot = slot;
     if (numThings > 0)
         attr->reserve(numThings);
     basicDraw->vertexAttributes.push_back(attr);
@@ -80,7 +82,7 @@ void BasicDrawableBuilderMTL::setupTexCoordEntry(int which,int numReserve)
         VertexAttributeMTL *vertAttrMTL = (VertexAttributeMTL *)basicDraw->vertexAttributes[newInfo.texCoordEntry];
         vertAttrMTL->setDefaultVector2f(Vector2f(0.0,0.0));
         vertAttrMTL->reserve(numReserve);
-        vertAttrMTL->bufferIndex = WKSVertexTextureBaseAttribute+ii;
+        vertAttrMTL->slot = WhirlyKitShader::WKSVertexTextureBaseAttribute+ii;
         basicDraw->texInfo.push_back(newInfo);
     }
 }
@@ -95,11 +97,26 @@ BasicDrawable *BasicDrawableBuilderMTL::getDrawable()
     if (!drawableGotten) {
         int ptsIndex = addAttribute(BDFloat3Type, a_PositionNameID);
         VertexAttributeMTL *ptsAttr = (VertexAttributeMTL *)basicDraw->vertexAttributes[ptsIndex];
-        ptsAttr->bufferIndex = WKSVertexPositionAttribute;
+        ptsAttr->slot = WhirlyKitShader::WKSVertexPositionAttribute;
         ptsAttr->reserve(points.size());
         for (auto pt : points)
             ptsAttr->addVector3f(pt);
         draw->tris = tris;
+        
+        // Expression uniforms, if we have those
+        if (colorExp || opacityExp || includeExp) {
+            WhirlyKitShader::UniformDrawStateExp vecExp;
+            memset(&vecExp, 0, sizeof(vecExp));
+            if (colorExp)
+                ColorExpressionToMtl(colorExp, vecExp.colorExp);
+            if (opacityExp)
+                FloatExpressionToMtl(opacityExp, vecExp.opacityExp);
+            
+            BasicDrawable::UniformBlock uniBlock;
+            uniBlock.blockData = RawDataRef(new RawNSDataReader([[NSData alloc] initWithBytes:&vecExp length:sizeof(vecExp)]));
+            uniBlock.bufferID = WhirlyKitShader::WKSUniformVecEntryExp;
+            basicDraw->setUniBlock(uniBlock);
+        }
         
         drawableGotten = true;
     }

@@ -34,9 +34,14 @@ import java.util.HashSet;
  */
 public class QuadLoaderBase implements QuadSamplingLayer.ClientInterface
 {
-    private QuadLoaderBase() { }
+    protected QuadLoaderBase() { }
 
     protected WeakReference<QuadSamplingLayer> samplingLayer;
+
+    protected QuadLoaderBase(BaseController inControl)
+    {
+        control = new WeakReference<BaseController>(inControl);
+    }
 
     protected QuadLoaderBase(BaseController inControl,SamplingParams params,int numFrames,Mode mode)
     {
@@ -174,7 +179,9 @@ public class QuadLoaderBase implements QuadSamplingLayer.ClientInterface
             public void run() {
                 loadInterp = newInterp;
                 newInterp.setLoader(theLoader);
-                reloadNative();
+                ChangeSet changes = new ChangeSet();
+                reloadNative(changes);
+                samplingLayer.get().layerThread.addChanges(changes);
             }
         });
     }
@@ -254,7 +261,7 @@ public class QuadLoaderBase implements QuadSamplingLayer.ClientInterface
     private native void samplingLayerDisconnectNative(QuadSamplingLayer layer,ChangeSet changes);
 
     // Used to initialize the loader for certain types of data.
-    enum Mode {SingleFrame,MultiFrame,Object};
+    public enum Mode {SingleFrame,MultiFrame,Object};
 
     /* --- Callback from C++ side --- */
 
@@ -284,6 +291,8 @@ public class QuadLoaderBase implements QuadSamplingLayer.ClientInterface
         TileID tileID = new TileID();
         tileID.x = tileX;  tileID.y = tileY;  tileID.level = tileLevel;
 
+        final WeakReference<BaseController> holdControl = new WeakReference<BaseController>(control.get());
+
         QIFFrameAsset[] frames = new QIFFrameAsset[tileInfos.length];
         int frame = 0;
         final QuadLoaderBase loaderBase = this;
@@ -306,7 +315,7 @@ public class QuadLoaderBase implements QuadSamplingLayer.ClientInterface
                     // Build a loader return object, fill in the data and then parse it
                     final LoaderReturn loadReturn = makeLoaderReturn();
                     loadReturn.setTileID(tileX, tileY, tileLevel);
-                    loadReturn.setFrame(fFrame);
+                    loadReturn.setFrame(getFrameID(fFrame),fFrame);
                     if (data != null)
                         loadReturn.addTileData(data);
 
@@ -316,7 +325,7 @@ public class QuadLoaderBase implements QuadSamplingLayer.ClientInterface
 
                     // Merge the data back in on the sampling layer's thread
                     final QuadSamplingLayer layer = samplingLayer.get();
-                    if (layer != null)
+                    if (layer != null) {
                         layer.layerThread.addTask(new Runnable() {
                             @Override
                             public void run() {
@@ -324,9 +333,13 @@ public class QuadLoaderBase implements QuadSamplingLayer.ClientInterface
                                     ChangeSet changes = new ChangeSet();
                                     mergeLoaderReturn(loadReturn, changes);
                                     layer.layerThread.addChanges(changes);
+                                    loadReturn.dispose();
                                 }
                             }
                         });
+                    } else {
+                        cleanupLoadedData(holdControl,loadReturn);
+                    }
                 }
 
                 @Override
@@ -372,7 +385,49 @@ public class QuadLoaderBase implements QuadSamplingLayer.ClientInterface
         }
     }
 
-    protected native void reloadNative();
+    // Clean up data that's been processed but we shut down the loader before it got back
+    private void cleanupLoadedData(WeakReference<BaseController> inControl,LoaderReturn loadReturn)
+    {
+        BaseController theControl = inControl.get();
+        if (theControl == null)
+            return;
+
+        ChangeSet changes = new ChangeSet();
+        loadReturn.deleteComponentObjects(theControl.renderControl,theControl.renderControl.componentManager,changes);
+
+        changes.process(theControl.renderControl,theControl.scene);
+    }
+
+    /**
+     * Each frame has a 64 bit frame ID (other than just 0 through whatever)
+     */
+    public native long getFrameID(int frame);
+
+    /**
+     * When you refresh the loader, we get a new generation.
+     * This is how we track data in transit.
+     */
+    public native int getGeneration();
+
+    /**
+     * Forces a reload of all currently loaded tiles.
+     */
+    public void reload()
+    {
+        if (samplingLayer.get() == null)
+            return;
+
+        samplingLayer.get().layerThread.addTask(new Runnable() {
+            @Override
+            public void run() {
+                ChangeSet changes = new ChangeSet();
+                reloadNative(changes);
+                samplingLayer.get().layerThread.addChanges(changes);
+            }
+        });
+    }
+
+    protected native void reloadNative(ChangeSet changes);
 
     public void finalize()
     {

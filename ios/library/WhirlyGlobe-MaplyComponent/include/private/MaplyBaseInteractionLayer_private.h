@@ -26,7 +26,6 @@
 #import "control/MaplyBaseViewController.h"
 #import "MaplyTextureAtlas_private.h"
 #import "ComponentManager_iOS.h"
-#import "MemManagerGLES.h"
 
 @interface MaplyBaseInteractionLayer : NSObject<WhirlyKitLayer>
 {
@@ -61,10 +60,6 @@
     /// Active shaders
     NSMutableArray *shaders;
         
-    std::mutex tempContextLock;
-    // We keep a set of temporary OpenGL ES contexts around for threads that don't have them
-    std::set<EAGLContext *> tempContexts;
-    
     // Set when we're trying to shut things down
     bool isShuttingDown;
 }
@@ -143,6 +138,9 @@
 
 // Remove objects associated with the user objects
 - (void)removeObjects:(NSArray *__nonnull)userObjs changes:(WhirlyKit::ChangeSet &)changes;
+
+// Remove objects by ID
+- (void)removeObjectsByID:(const WhirlyKit::SimpleIDSet &)compObjIDs mode:(MaplyThreadMode)threadMode;
 
 // Enable objects
 - (void)enableObjects:(NSArray *__nonnull)userObjs mode:(MaplyThreadMode)threadMode;

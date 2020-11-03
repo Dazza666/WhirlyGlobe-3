@@ -71,6 +71,10 @@ TextureMTL::TextureMTL(const std::string &name,UIImage *inImage)
     
     texData = RawDataRef(new RawNSDataReader(data));
 }
+
+TextureBaseMTL::~TextureBaseMTL()
+{
+}
     
 RawDataRef TextureMTL::convertData()
 {
@@ -118,6 +122,8 @@ RawDataRef TextureMTL::convertData()
             outDataRef = RawDataRef(new RawNSDataReader(outData));
         }
             break;
+        case TexTypeSingleInt16:
+            break;
         default:
             NSLog(@"TextureMTL: Format %d not supported for passing in data.",(int)format);
             break;
@@ -134,7 +140,7 @@ bool TextureMTL::createInRenderer(const RenderSetupInfo *inSetupInfo)
     if (!texData && !isEmptyTexture)
         return false;
     
-    if (mtlID)
+    if (texBuf.tex)
         return true;
     
     RenderSetupInfoMTL *setupInfo = (RenderSetupInfoMTL *)inSetupInfo;
@@ -209,6 +215,10 @@ bool TextureMTL::createInRenderer(const RenderSetupInfo *inSetupInfo)
             pixFormat = MTLPixelFormatDepth32Float;
             bytesPerRow = 4*width;
             break;
+        case TexTypeSingleInt16:
+            pixFormat = MTLPixelFormatR16Sint;
+            bytesPerRow = 2*width;
+            break;
         case TexTypeSingleUInt32:
             pixFormat = MTLPixelFormatR32Uint;
             bytesPerRow = 4*width;
@@ -240,14 +250,15 @@ bool TextureMTL::createInRenderer(const RenderSetupInfo *inSetupInfo)
     if (usesMipmaps)
         desc.usage |= MTLTextureUsageShaderWrite;
     
-    mtlID = [setupInfo->mtlDevice newTextureWithDescriptor:desc];
+    size_t size = bytesPerRow * height;
+    texBuf = setupInfo->heapManage.newTextureWithDescriptor(desc,size);
     if (!name.empty())
-        [mtlID setLabel:[NSString stringWithFormat:@"%s",name.c_str()]];
-    if (mtlID) {
+        [texBuf.tex setLabel:[NSString stringWithFormat:@"%s",name.c_str()]];
+    if (texBuf.tex) {
         MTLRegion region = MTLRegionMake2D(0,0,width,height);
         if (texData) {
             RawDataRef convData = convertData();
-            [mtlID replaceRegion:region mipmapLevel:0 withBytes:convData->getRawData() bytesPerRow:bytesPerRow];
+            [texBuf.tex replaceRegion:region mipmapLevel:0 withBytes:convData->getRawData() bytesPerRow:bytesPerRow];
         }
     } else {
         NSLog(@"Error setting up Metal Texture");
@@ -255,15 +266,12 @@ bool TextureMTL::createInRenderer(const RenderSetupInfo *inSetupInfo)
     
     texData.reset();
     
-    return mtlID != nil;
+    return texBuf.tex != nil;
 }
 
 void TextureMTL::destroyInRenderer(const RenderSetupInfo *inSetupInfo,Scene *inScene)
 {
-    SceneMTL *scene = (SceneMTL *)inScene;
-
-    scene->releaseBuffer(mtlID);
-    mtlID = nil;
+    texBuf.tex = nil;
 }
     
 }

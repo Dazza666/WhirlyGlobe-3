@@ -48,9 +48,9 @@ public:
 class ScreenSpaceDrawableBuilderGLES : virtual public BasicDrawableBuilderGLES, virtual public ScreenSpaceDrawableBuilder
 {
 public:
-    ScreenSpaceDrawableBuilderGLES(const std::string &name);
+    ScreenSpaceDrawableBuilderGLES(const std::string &name,Scene *scene);
     
-    virtual int addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int numThings = -1);
+    virtual int addAttribute(BDAttributeDataType dataType,StringIdentity nameID,int slot = -1,int numThings = -1);
 
     virtual ScreenSpaceTweaker *makeTweaker();
     

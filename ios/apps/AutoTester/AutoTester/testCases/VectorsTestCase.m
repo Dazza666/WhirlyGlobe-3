@@ -104,7 +104,7 @@
 
 - (void) stop
 {
-    [self.baseView stop];
+    [self.baseCase stop];
     if (_compObjs) {
         [self.baseViewController removeObjects:_compObjs];
         [_compObjs removeAllObjects];

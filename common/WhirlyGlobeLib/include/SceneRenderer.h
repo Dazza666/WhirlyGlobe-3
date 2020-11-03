@@ -70,6 +70,7 @@ public:
     Eigen::Matrix4d viewAndModelMat4d;
     /// The model, view, and projection matrix all rolled into one
     Eigen::Matrix4f mvpMat;
+    Eigen::Matrix4d mvpMat4d;
     /// Inverse of the model/view/projection matrix
     Eigen::Matrix4f mvpInvMat;
     /// Normal matrix for MVP
@@ -111,6 +112,39 @@ public:
  */
 typedef enum {zBufferOn,zBufferOff,zBufferOffDefault} WhirlyKitSceneRendererZBufferMode;
 
+// All the drawables to draw into a render target
+class RenderTargetContainer
+{
+public:
+    virtual ~RenderTargetContainer() { }
+    
+    // Sort by draw priority and zbuffer on or off
+    typedef struct {
+        bool operator () (const DrawableRef a,const DrawableRef b) const {
+            if (a->getDrawPriority() == b->getDrawPriority()) {
+                bool bufferA = a->getRequestZBuffer();
+                bool bufferB = b->getRequestZBuffer();
+                if (bufferA == bufferB)
+                    return a->getId() < b->getId();
+                return !bufferA;
+            }
+            
+            return a->getDrawPriority() < b->getDrawPriority();
+        }
+    } PrioritySorter;
+
+    // What we're doing to (the screen if it's empty)
+    RenderTargetRef renderTarget;
+
+    // Drawables sorted by draw priority
+    std::set<DrawableRef,PrioritySorter> drawables;
+    bool modified;   // Set when the contents of the container are modified
+
+protected:
+    RenderTargetContainer(RenderTargetRef renderTarget);
+};
+typedef std::shared_ptr<RenderTargetContainer> RenderTargetContainerRef;
+
 /**
   A group of geometry, render targets, etc... that can be rendered in parallel.  The
     order of work groups determines order of rendering.
@@ -121,35 +155,7 @@ public:
     // The various pre-defined workgroup stages
     typedef enum {Calculation=0,Offscreen,ReduceOps,ScreenRender} GroupType;
 
-    WorkGroup(GroupType groupType);
-    ~WorkGroup();
-    
-    // All the drawables to draw into a render target
-    class RenderTargetContainer
-    {
-    public:
-        RenderTargetContainer(RenderTargetRef renderTarget) : renderTarget(renderTarget) { }
-        
-        // Sort by draw priority and zbuffer on or off
-        typedef struct {
-            bool operator () (const DrawableRef a,const DrawableRef b) const {
-                if (a->getDrawPriority() == b->getDrawPriority()) {
-                    bool bufferA = a->getRequestZBuffer();
-                    bool bufferB = b->getRequestZBuffer();
-                    if (bufferA == bufferB)
-                        return a->getId() < b->getId();
-                    return !bufferA;
-                }
-                
-                return a->getDrawPriority() < b->getDrawPriority();
-            }
-        } PrioritySorter;
-        
-        RenderTargetRef renderTarget;
-        // Drawables sorted by draw priority
-        std::set<DrawableRef,PrioritySorter> drawables;
-    };
-    typedef std::shared_ptr<RenderTargetContainer> RenderTargetContainerRef;
+    virtual ~WorkGroup();
     
     // Put the given render target in this work group
     void addRenderTarget(RenderTargetRef renderTarget);
@@ -164,8 +170,11 @@ public:
     GroupType groupType;
 
     std::vector<RenderTargetContainerRef> renderTargetContainers;
-    // TODO: Reductions
-    // TODO: Callbacks
+
+    virtual RenderTargetContainerRef makeRenderTargetContainer(RenderTargetRef) = 0;
+
+protected:
+    WorkGroup()  {}
 };
 typedef std::shared_ptr<WorkGroup> WorkGroupRef;
 
@@ -179,7 +188,7 @@ public:
     SceneRenderer();
     virtual ~SceneRenderer();
     
-    /// Renderer type.  Just two for now.
+    /// Renderer type.  Back down to one on iOS.
     typedef enum {RenderGLES,RenderMetal} Type;
     virtual Type getType() = 0;
     
@@ -258,7 +267,7 @@ public:
     /// Add a drawable to the scene renderer.  We'll sort it into the appropriate render target
     virtual void addDrawable(DrawableRef newDrawable);
     /// Remove the given drawable from
-    virtual void removeDrawable(DrawableRef draw,bool teardown);
+    virtual void removeDrawable(DrawableRef draw,bool teardown,RenderTeardownInfoRef teardownInfo);
         
     /// Move things around as required by outside updates
     virtual void updateWorkGroups(RendererFrameInfo *frameInfo);
@@ -324,9 +333,12 @@ public:
     std::vector<WorkGroupRef> workGroups;
 
     // Drawables that we currently know about, but are off
-    std::set<DrawableRef,IdentifiableRefSorter> offDrawables;
+    std::set<DrawableRef> offDrawables;
 
-protected:
+    // Explicitly clear any held structures
+    void shutdown();
+
+public:
     // Called by the subclass
     virtual void init();
     
@@ -390,6 +402,9 @@ protected:
     TimeInterval lightsLastUpdated;
     Material defaultMat;    
     std::vector<DirectionalLight> lights;
+
+    // Everything torn down until the next frame
+    RenderTeardownInfoRef teardownInfo;
 };
 
 typedef std::shared_ptr<SceneRenderer> SceneRendererRef;

@@ -35,6 +35,25 @@ class RenderSetupInfo
 {
 public:
 };
+
+class TextureBase;
+typedef std::shared_ptr<TextureBase> TextureBaseRef;
+class Drawable;
+typedef std::shared_ptr<Drawable> DrawableRef;
+
+/**
+ Base class for anything we want to pass out of the teardown calls for drawables
+ */
+class RenderTeardownInfo
+{
+public:
+    virtual ~RenderTeardownInfo() { }
+    
+    // Normally we'll call the regular destroy calls, but various renderers might do something else
+    virtual void destroyTexture(SceneRenderer *renderer,TextureBaseRef tex);
+    virtual void destroyDrawable(SceneRenderer *renderer,DrawableRef draw);
+};
+typedef std::shared_ptr<RenderTeardownInfo> RenderTeardownInfoRef;
     
 class Scene;
 class SceneRenderer;
@@ -55,7 +74,7 @@ public:
     virtual bool needsFlush();
     
     /// Fill this in to set up whatever resources we need on the GL side
-    virtual void setupForRenderer(const RenderSetupInfo *);
+    virtual void setupForRenderer(const RenderSetupInfo *,Scene *scene);
     
     /// Make a change to the scene.  For the renderer.  Never call this.
     virtual void execute(Scene *scene,SceneRenderer *renderer,View *view) = 0;
@@ -69,6 +88,7 @@ public:
 
 /// Representation of a list of changes.  Might get more complex in the future.
 typedef std::vector<ChangeRequest *> ChangeSet;
+typedef std::shared_ptr<ChangeSet> ChangeSetRef;
 
 typedef struct
 {

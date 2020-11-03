@@ -25,7 +25,6 @@
 #import "MaplyShader_private.h"
 #import "MaplyCoordinateSystem_private.h"
 #import "MaplyQuadSampler_private.h"
-#import "SceneRendererGLES_iOS.h"
 
 @class MaplyBaseInteractionLayer;
 
@@ -110,15 +109,7 @@
 - (void)teardown;
 - (void)clear;
 
-- (void) useGLContext;
-
 - (void)updateLights;
-
-/// Called internally to mark a block of work being done
-- (bool) startOfWork;
-
-/// Called internally to end a block of work being done
-- (void) endOfWork;
 
 /// Look for a sampling layer that matches the given parameters
 /// We'll also keep it around until the user lets us know we're done
@@ -130,5 +121,8 @@
 // Used for setup by the view controllers
 - (void)loadSetup_scene:(MaplyBaseInteractionLayer *)newInteractLayer;
 - (void)loadSetup_view:(WhirlyKit::ViewRef)view;
+
+// Version of remove objects that takes raw IDs
+- (void)removeObjectsByID:(const WhirlyKit::SimpleIDSet &)compObjIDs mode:(MaplyThreadMode)threadMode;
 
 @end

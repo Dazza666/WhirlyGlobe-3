@@ -20,6 +20,7 @@
 
 #import "BasicDrawableBuilder.h"
 #import "Program.h"
+#import "BaseInfo.h"
 
 namespace WhirlyKit
 {
@@ -51,7 +52,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     WideVectorDrawableBuilder();
-    ~WideVectorDrawableBuilder();
+    virtual ~WideVectorDrawableBuilder();
 
     virtual void Init(unsigned int numVert,unsigned int numTri,bool globeMode);
     
@@ -82,7 +83,10 @@ public:
     
     /// Fix the width to a real world value, rather than letting it change
     void setRealWorldWidth(double width);
-
+    
+    // Apply a width expression
+    void setWidthExpression(FloatExpressionInfoRef widthExp);
+    
     // The tweaker sets up uniforms before a given drawable draws
     void setupTweaker(BasicDrawable *theDraw);
     
@@ -102,6 +106,8 @@ protected:
     int n0_index;
     int c0_index;
     int tex_index;
+    
+    FloatExpressionInfoRef widthExp;
     
 #ifdef WIDEVECDEBUG
     Point3fVector locPts;
