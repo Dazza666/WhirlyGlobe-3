@@ -9,6 +9,26 @@
 /* Begin PBXBuildFile section */
 		12586E2324D1E77C0062AB2C /* zoom0.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 12586E2124D1E77C0062AB2C /* zoom0.mbtiles */; };
 		12586E2524D1E8170062AB2C /* coastline-roads-urban.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 12586E2424D1E8160062AB2C /* coastline-roads-urban.mbtiles */; };
+		12D38F0524DAED1500FC1738 /* 12219_boat_v2_L2.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F0024DAED1500FC1738 /* 12219_boat_v2_L2.mtl */; };
+		12D38F0724DAED1500FC1738 /* 12219_boat_v2_L2.obj in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F0224DAED1500FC1738 /* 12219_boat_v2_L2.obj */; };
+		12D38F2024DAFDDF00FC1738 /* boat_buffer_diffuse.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F1924DAFDDE00FC1738 /* boat_buffer_diffuse.jpg */; };
+		12D38F2124DAFDDF00FC1738 /* boat_roof_accessory_diffuse.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F1A24DAFDDE00FC1738 /* boat_roof_accessory_diffuse.jpg */; };
+		12D38F2224DAFDDF00FC1738 /* boat_body_diffuse.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F1B24DAFDDF00FC1738 /* boat_body_diffuse.jpg */; };
+		12D38F2E24DAFEFE00FC1738 /* boat_ao.bmp in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F2724DAFEFE00FC1738 /* boat_ao.bmp */; };
+		12D38F2F24DAFEFE00FC1738 /* boat_specular.bmp in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F2824DAFEFE00FC1738 /* boat_specular.bmp */; };
+		12D38F3024DAFEFE00FC1738 /* boat_diffuse.bmp in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F2924DAFEFE00FC1738 /* boat_diffuse.bmp */; };
+		12D38F3124DAFEFE00FC1738 /* boat_gloss.bmp in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F2A24DAFEFE00FC1738 /* boat_gloss.bmp */; };
+		12D38F3224DAFEFE00FC1738 /* boat_normal.bmp in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F2B24DAFEFE00FC1738 /* boat_normal.bmp */; };
+		12D38F3324DAFEFE00FC1738 /* Boat.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F2C24DAFEFE00FC1738 /* Boat.mtl */; };
+		12D38F3424DAFEFE00FC1738 /* Boat.obj in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F2D24DAFEFE00FC1738 /* Boat.obj */; };
+		12E5ECFE24DA9ED200579BC5 /* Cruiser_2012.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 12E5ECF624DA9ED100579BC5 /* Cruiser_2012.mtl */; };
+		12E5ECFF24DA9ED200579BC5 /* angar_bo4ka_09_01_01_02.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 12E5ECF724DA9ED100579BC5 /* angar_bo4ka_09_01_01_02.jpg */; };
+		12E5ED0024DA9ED200579BC5 /* dk1b.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 12E5ECF824DA9ED100579BC5 /* dk1b.jpg */; };
+		12E5ED0124DA9ED200579BC5 /* cs2b.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 12E5ECF924DA9ED100579BC5 /* cs2b.jpg */; };
+		12E5ED0224DA9ED200579BC5 /* Cruiser 2012.obj in Resources */ = {isa = PBXBuildFile; fileRef = 12E5ECFA24DA9ED100579BC5 /* Cruiser 2012.obj */; };
+		12E5ED0324DA9ED200579BC5 /* ang1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 12E5ECFB24DA9ED100579BC5 /* ang1.jpg */; };
+		12E5ED0424DA9ED200579BC5 /* dr3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 12E5ECFC24DA9ED100579BC5 /* dr3.jpg */; };
+		12E5ED0524DA9ED200579BC5 /* cs1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 12E5ECFD24DA9ED200579BC5 /* cs1.jpg */; };
 		2B158BEF1D5D19E900103E04 /* VectorHoleTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B158BEE1D5D19E900103E04 /* VectorHoleTestCase.m */; };
 		2B1806D322AECF4300DD3DB1 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B1806D122AECF4200DD3DB1 /* Accelerate.framework */; };
 		2B1C26531C91037100C71B0A /* France.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 2B1C26511C9100A500C71B0A /* France.mbtiles */; };
@@ -566,6 +586,29 @@
 /* Begin PBXFileReference section */
 		12586E2124D1E77C0062AB2C /* zoom0.mbtiles */ = {isa = PBXFileReference; lastKnownFileType = file; path = zoom0.mbtiles; sourceTree = "<group>"; };
 		12586E2424D1E8160062AB2C /* coastline-roads-urban.mbtiles */ = {isa = PBXFileReference; lastKnownFileType = file; path = "coastline-roads-urban.mbtiles"; sourceTree = "<group>"; };
+		12D38EFE24DAED1500FC1738 /* boat_roof_accessory_diffuse.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = boat_roof_accessory_diffuse.jpg; sourceTree = "<group>"; };
+		12D38EFF24DAED1500FC1738 /* boat_buffer_diffuse.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = boat_buffer_diffuse.jpg; sourceTree = "<group>"; };
+		12D38F0024DAED1500FC1738 /* 12219_boat_v2_L2.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 12219_boat_v2_L2.mtl; sourceTree = "<group>"; };
+		12D38F0124DAED1500FC1738 /* boat_body_diffuse.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = boat_body_diffuse.jpg; sourceTree = "<group>"; };
+		12D38F0224DAED1500FC1738 /* 12219_boat_v2_L2.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = 12219_boat_v2_L2.obj; path = "../../../../../../../Downloads/boat_v2_L2.123cb2c2d48f-7519-476c-8274-b5bcd578c751 2/12219_boat_v2_L2.obj"; sourceTree = "<group>"; };
+		12D38F1924DAFDDE00FC1738 /* boat_buffer_diffuse.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = boat_buffer_diffuse.jpg; sourceTree = "<group>"; };
+		12D38F1A24DAFDDE00FC1738 /* boat_roof_accessory_diffuse.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = boat_roof_accessory_diffuse.jpg; sourceTree = "<group>"; };
+		12D38F1B24DAFDDF00FC1738 /* boat_body_diffuse.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = boat_body_diffuse.jpg; sourceTree = "<group>"; };
+		12D38F2724DAFEFE00FC1738 /* boat_ao.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = boat_ao.bmp; sourceTree = "<group>"; };
+		12D38F2824DAFEFE00FC1738 /* boat_specular.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = boat_specular.bmp; sourceTree = "<group>"; };
+		12D38F2924DAFEFE00FC1738 /* boat_diffuse.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = boat_diffuse.bmp; sourceTree = "<group>"; };
+		12D38F2A24DAFEFE00FC1738 /* boat_gloss.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = boat_gloss.bmp; sourceTree = "<group>"; };
+		12D38F2B24DAFEFE00FC1738 /* boat_normal.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = boat_normal.bmp; sourceTree = "<group>"; };
+		12D38F2C24DAFEFE00FC1738 /* Boat.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Boat.mtl; sourceTree = "<group>"; };
+		12D38F2D24DAFEFE00FC1738 /* Boat.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Boat.obj; sourceTree = "<group>"; };
+		12E5ECF624DA9ED100579BC5 /* Cruiser_2012.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Cruiser_2012.mtl; sourceTree = "<group>"; };
+		12E5ECF724DA9ED100579BC5 /* angar_bo4ka_09_01_01_02.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = angar_bo4ka_09_01_01_02.jpg; sourceTree = "<group>"; };
+		12E5ECF824DA9ED100579BC5 /* dk1b.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dk1b.jpg; sourceTree = "<group>"; };
+		12E5ECF924DA9ED100579BC5 /* cs2b.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cs2b.jpg; sourceTree = "<group>"; };
+		12E5ECFA24DA9ED100579BC5 /* Cruiser 2012.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Cruiser 2012.obj"; sourceTree = "<group>"; };
+		12E5ECFB24DA9ED100579BC5 /* ang1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ang1.jpg; sourceTree = "<group>"; };
+		12E5ECFC24DA9ED100579BC5 /* dr3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dr3.jpg; sourceTree = "<group>"; };
+		12E5ECFD24DA9ED200579BC5 /* cs1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cs1.jpg; sourceTree = "<group>"; };
 		2B127BFE201802BB0099F405 /* OpenMapTilesHybridTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMapTilesHybridTestCase.swift; sourceTree = "<group>"; };
 		2B158BED1D5D19E900103E04 /* VectorHoleTestCase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VectorHoleTestCase.h; sourceTree = "<group>"; };
 		2B158BEE1D5D19E900103E04 /* VectorHoleTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VectorHoleTestCase.m; sourceTree = "<group>"; };
@@ -577,7 +620,7 @@
 		2B249F3E23F4A82600CFA3D0 /* GeographyClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeographyClass.swift; sourceTree = "<group>"; };
 		2B29944A243BA08D00677DE4 /* MapboxKindaMap.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MapboxKindaMap.swift; path = "../../../library/WhirlyGlobe-MaplyComponent/src/helpers/MapboxKindaMap.swift"; sourceTree = "<group>"; };
 		2B29944C243BA16000677DE4 /* SimpleStyleTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleStyleTestCase.swift; sourceTree = "<group>"; };
-		2B29944E243BA31900677DE4 /* cube.obj */ = {isa = PBXFileReference; lastKnownFileType = file; name = cube.obj; path = resources/cube.obj; sourceTree = SOURCE_ROOT; };
+		2B29944E243BA31900677DE4 /* cube.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = cube.obj; path = resources/cube.obj; sourceTree = SOURCE_ROOT; };
 		2B2A417C1D83454900098E12 /* ActiveObjectTestCase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ActiveObjectTestCase.h; sourceTree = "<group>"; };
 		2B2A417D1D83454900098E12 /* ActiveObjectTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ActiveObjectTestCase.m; sourceTree = "<group>"; };
 		2B361E3921237CFE0074D06D /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
@@ -1516,6 +1559,29 @@
 		88FF5C6C1BC31D6D002F15CE /* models */ = {
 			isa = PBXGroup;
 			children = (
+				12D38F2724DAFEFE00FC1738 /* boat_ao.bmp */,
+				12D38F2924DAFEFE00FC1738 /* boat_diffuse.bmp */,
+				12D38F2A24DAFEFE00FC1738 /* boat_gloss.bmp */,
+				12D38F2B24DAFEFE00FC1738 /* boat_normal.bmp */,
+				12D38F2824DAFEFE00FC1738 /* boat_specular.bmp */,
+				12D38F2C24DAFEFE00FC1738 /* Boat.mtl */,
+				12D38F2D24DAFEFE00FC1738 /* Boat.obj */,
+				12D38F1B24DAFDDF00FC1738 /* boat_body_diffuse.jpg */,
+				12D38F1924DAFDDE00FC1738 /* boat_buffer_diffuse.jpg */,
+				12D38F1A24DAFDDE00FC1738 /* boat_roof_accessory_diffuse.jpg */,
+				12D38F0024DAED1500FC1738 /* 12219_boat_v2_L2.mtl */,
+				12D38F0224DAED1500FC1738 /* 12219_boat_v2_L2.obj */,
+				12D38F0124DAED1500FC1738 /* boat_body_diffuse.jpg */,
+				12D38EFF24DAED1500FC1738 /* boat_buffer_diffuse.jpg */,
+				12D38EFE24DAED1500FC1738 /* boat_roof_accessory_diffuse.jpg */,
+				12E5ECFB24DA9ED100579BC5 /* ang1.jpg */,
+				12E5ECF724DA9ED100579BC5 /* angar_bo4ka_09_01_01_02.jpg */,
+				12E5ECFA24DA9ED100579BC5 /* Cruiser 2012.obj */,
+				12E5ECF624DA9ED100579BC5 /* Cruiser_2012.mtl */,
+				12E5ECFD24DA9ED200579BC5 /* cs1.jpg */,
+				12E5ECF924DA9ED100579BC5 /* cs2b.jpg */,
+				12E5ECF824DA9ED100579BC5 /* dk1b.jpg */,
+				12E5ECFC24DA9ED100579BC5 /* dr3.jpg */,
 				2B29944E243BA31900677DE4 /* cube.obj */,
 				88FF5C6D1BC31D6D002F15CE /* cessna.obj */,
 				88FF5C6E1BC31D6D002F15CE /* cessna.png */,
@@ -1886,12 +1952,12 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0710;
-				LastUpgradeCheck = 1130;
+				LastUpgradeCheck = 1210;
 				ORGANIZATIONNAME = "mousebird consulting";
 				TargetAttributes = {
 					88E4B8BE1B83B6AB0050D21B = {
 						CreatedOnToolsVersion = 6.4;
-						DevelopmentTeam = BFXSGS6V8N;
+						DevelopmentTeam = XK44V4G34K;
 						LastSwiftMigration = 0930;
 						ProvisioningStyle = Automatic;
 					};
@@ -1955,6 +2021,7 @@
 				88FF5E9B1BC31D95002F15CE /* NLD.geojson in Resources */,
 				88FF5C851BC31D6D002F15CE /* art-gallery-24@2x.png in Resources */,
 				88FF5C831BC31D6D002F15CE /* alcohol-shop-24@2x.png in Resources */,
+				12D38F2E24DAFEFE00FC1738 /* boat_ao.bmp in Resources */,
 				88FF5BEB1BC31D53002F15CE /* SunImage.png in Resources */,
 				88FF5CBE1BC31D6D002F15CE /* park2-24@2x.png in Resources */,
 				88FF5E6A1BC31D95002F15CE /* KEN.geojson in Resources */,
@@ -1988,6 +2055,7 @@
 				8F981DBB1DE3577C00717DF1 /* ne_10m_roads.shp in Resources */,
 				88FF5EC21BC31D95002F15CE /* SSD.geojson in Resources */,
 				88FF5E6F1BC31D95002F15CE /* KOR.geojson in Resources */,
+				12D38F3124DAFEFE00FC1738 /* boat_gloss.bmp in Resources */,
 				88FF5E341BC31D95002F15CE /* DOM.geojson in Resources */,
 				2B4BA6D11C83A22000DC1562 /* rightbend.geojson in Resources */,
 				88FF5E4D1BC31D95002F15CE /* GNQ.geojson in Resources */,
@@ -2002,6 +2070,7 @@
 				88FF5E7A1BC31D95002F15CE /* LUX.geojson in Resources */,
 				E5941DCB1E0D02A800E1C8B3 /* osm_landuse.sld in Resources */,
 				88FF5E4C1BC31D95002F15CE /* GNB.geojson in Resources */,
+				12E5ED0224DA9ED200579BC5 /* Cruiser 2012.obj in Resources */,
 				88FF5E8D1BC31D95002F15CE /* MRT.geojson in Resources */,
 				88FF5C761BC31D6D002F15CE /* lowres_wtb_0x1.pvrtc in Resources */,
 				88FF5E421BC31D95002F15CE /* FSM.geojson in Resources */,
@@ -2019,6 +2088,7 @@
 				88FF5EF21BC31D95002F15CE /* tl_2013_06075_roads.shx in Resources */,
 				88FF5EB01BC31D95002F15CE /* REU.geojson in Resources */,
 				88FF5EC41BC31D95002F15CE /* SUR.geojson in Resources */,
+				12D38F3224DAFEFE00FC1738 /* boat_normal.bmp in Resources */,
 				88FF5E801BC31D95002F15CE /* MDA.geojson in Resources */,
 				88FF5E7F1BC31D95002F15CE /* MCO.geojson in Resources */,
 				88FF5CE31BC31D6D002F15CE /* triangle-24@2x.png in Resources */,
@@ -2057,6 +2127,7 @@
 				88FF5EBB1BC31D95002F15CE /* SLB.geojson in Resources */,
 				88FF5CD11BC31D6D002F15CE /* rocket-24@2x.png in Resources */,
 				88FF5EE61BC31D95002F15CE /* VNM.geojson in Resources */,
+				12E5ED0024DA9ED200579BC5 /* dk1b.jpg in Resources */,
 				88FF5E5B1BC31D95002F15CE /* IDN.geojson in Resources */,
 				88FF5E121BC31D95002F15CE /* BLZ.geojson in Resources */,
 				88FF5E9E1BC31D95002F15CE /* NRU.geojson in Resources */,
@@ -2115,7 +2186,9 @@
 				88FF5EB51BC31D95002F15CE /* SDN.geojson in Resources */,
 				88FF5C931BC31D6D002F15CE /* cemetery-24@2x.png in Resources */,
 				88FF5E041BC31D95002F15CE /* AUT.geojson in Resources */,
+				12E5ED0524DA9ED200579BC5 /* cs1.jpg in Resources */,
 				88FF5CA51BC31D6D002F15CE /* ferry-24@2x.png in Resources */,
+				12D38F2124DAFDDF00FC1738 /* boat_roof_accessory_diffuse.jpg in Resources */,
 				88FF5CC41BC31D6D002F15CE /* playground-24@2x.png in Resources */,
 				88FF5E0A1BC31D95002F15CE /* BFA.geojson in Resources */,
 				88FF5E5D1BC31D95002F15CE /* IND.geojson in Resources */,
@@ -2131,6 +2204,7 @@
 				88FF5CCE1BC31D6D002F15CE /* religious-muslim-24@2x.png in Resources */,
 				88E4B8CA1B83B6AB0050D21B /* Main.storyboard in Resources */,
 				88FF5EC71BC31D95002F15CE /* SWE.geojson in Resources */,
+				12E5ECFF24DA9ED200579BC5 /* angar_bo4ka_09_01_01_02.jpg in Resources */,
 				88FF5CD91BC31D6D002F15CE /* star-24@2x.png in Resources */,
 				88FF5E5E1BC31D95002F15CE /* IOT.geojson in Resources */,
 				88FF5C841BC31D6D002F15CE /* america-football-24@2x.png in Resources */,
@@ -2142,6 +2216,7 @@
 				88FF5BE71BC31D53002F15CE /* map_pin.png in Resources */,
 				88FF5E1E1BC31D95002F15CE /* CHE.geojson in Resources */,
 				88FF5E451BC31D95002F15CE /* GEO.geojson in Resources */,
+				12D38F3424DAFEFE00FC1738 /* Boat.obj in Resources */,
 				2B4B30C12395F08D00854073 /* maptiler_streets.json in Resources */,
 				88FF5E571BC31D95002F15CE /* HND.geojson in Resources */,
 				88FF5C941BC31D6D002F15CE /* cinema-24@2x.png in Resources */,
@@ -2153,8 +2228,10 @@
 				88FF5CF01BC31D6D002F15CE /* moon.png in Resources */,
 				88FF5E361BC31D95002F15CE /* ECU.geojson in Resources */,
 				88E4B8CF1B83B6AB0050D21B /* LaunchScreen.xib in Resources */,
+				12D38F2024DAFDDF00FC1738 /* boat_buffer_diffuse.jpg in Resources */,
 				88FF5ED31BC31D95002F15CE /* TLS.geojson in Resources */,
 				88FF5E821BC31D95002F15CE /* MDV.geojson in Resources */,
+				12D38F2224DAFDDF00FC1738 /* boat_body_diffuse.jpg in Resources */,
 				88FF5E021BC31D95002F15CE /* ATG.geojson in Resources */,
 				88FF5E561BC31D95002F15CE /* HMD.geojson in Resources */,
 				88FF5DFA1BC31D95002F15CE /* ALB.geojson in Resources */,
@@ -2192,6 +2269,7 @@
 				88FF5E241BC31D95002F15CE /* COG.geojson in Resources */,
 				2B1C26531C91037100C71B0A /* France.mbtiles in Resources */,
 				88FF5E911BC31D95002F15CE /* MWI.geojson in Resources */,
+				12E5ECFE24DA9ED200579BC5 /* Cruiser_2012.mtl in Resources */,
 				88FF5CDE1BC31D6D002F15CE /* tennis-24@2x.png in Resources */,
 				88FF5C981BC31D6D002F15CE /* clothing-store-24@2x.png in Resources */,
 				88FF5CA91BC31D6D002F15CE /* golf-24@2x.png in Resources */,
@@ -2209,6 +2287,7 @@
 				2B4BA6D71C83A22000DC1562 /* straight.geojson in Resources */,
 				88FF5E031BC31D95002F15CE /* AUS.geojson in Resources */,
 				88FF5E0D1BC31D95002F15CE /* BHR.geojson in Resources */,
+				12D38F0724DAED1500FC1738 /* 12219_boat_v2_L2.obj in Resources */,
 				88FF5CAC1BC31D6D002F15CE /* heliport-24@2x.png in Resources */,
 				88FF5E0F1BC31D95002F15CE /* BIH.geojson in Resources */,
 				88FF5C991BC31D6D002F15CE /* college-24@2x.png in Resources */,
@@ -2228,6 +2307,7 @@
 				E5C82FD01E221C890074DF23 /* residential.png in Resources */,
 				2B4B30C22395F08D00854073 /* maptiler_topo.json in Resources */,
 				88FF5E811BC31D95002F15CE /* MDG.geojson in Resources */,
+				12D38F3324DAFEFE00FC1738 /* Boat.mtl in Resources */,
 				88FF5E371BC31D95002F15CE /* EGY.geojson in Resources */,
 				88FF5E9F1BC31D95002F15CE /* NZL.geojson in Resources */,
 				88FF5E8F1BC31D95002F15CE /* MTQ.geojson in Resources */,
@@ -2238,6 +2318,7 @@
 				88FF5CCC1BC31D6D002F15CE /* religious-christian-24@2x.png in Resources */,
 				88FF5E4F1BC31D95002F15CE /* GRD.geojson in Resources */,
 				88FF5E101BC31D95002F15CE /* BLM.geojson in Resources */,
+				12E5ED0424DA9ED200579BC5 /* dr3.jpg in Resources */,
 				88FF5C911BC31D6D002F15CE /* campsite-24@2x.png in Resources */,
 				88FF5EA51BC31D95002F15CE /* PHL.geojson in Resources */,
 				88FF5E7C1BC31D95002F15CE /* MAC.geojson in Resources */,
@@ -2285,6 +2366,7 @@
 				88FF5EBE1BC31D95002F15CE /* SMR.geojson in Resources */,
 				88FF5CD81BC31D6D002F15CE /* square-stroked-24@2x.png in Resources */,
 				88FF5DFB1BC31D95002F15CE /* AND.geojson in Resources */,
+				12E5ED0324DA9ED200579BC5 /* ang1.jpg in Resources */,
 				88FF5ECE1BC31D95002F15CE /* TGO.geojson in Resources */,
 				88FF5CC91BC31D6D002F15CE /* rail-24@2x.png in Resources */,
 				88FF5CE61BC31D6D002F15CE /* warehouse-24@2x.png in Resources */,
@@ -2315,6 +2397,7 @@
 				E53CF5E41E1EAF73000FB5C1 /* firehouse.png in Resources */,
 				88FF5BE91BC31D53002F15CE /* star_background.png in Resources */,
 				88FF5E6C1BC31D95002F15CE /* KHM.geojson in Resources */,
+				12D38F2F24DAFEFE00FC1738 /* boat_specular.bmp in Resources */,
 				88FF5C7D1BC31D6D002F15CE /* lowres_wtb_4x0.pvrtc in Resources */,
 				88FF5EC81BC31D95002F15CE /* SWZ.geojson in Resources */,
 				88FF5EF01BC31D95002F15CE /* tl_2013_06075_roads.prj in Resources */,
@@ -2339,6 +2422,7 @@
 				88FF5C771BC31D6D002F15CE /* lowres_wtb_1x0.pvrtc in Resources */,
 				88FF5E2C1BC31D95002F15CE /* CXR.geojson in Resources */,
 				88FF5ED81BC31D95002F15CE /* TUV.geojson in Resources */,
+				12D38F3024DAFEFE00FC1738 /* boat_diffuse.bmp in Resources */,
 				88FF5CE11BC31D6D002F15CE /* town-24@2x.png in Resources */,
 				88FF5C7B1BC31D6D002F15CE /* lowres_wtb_3x0.pvrtc in Resources */,
 				88FF5EC61BC31D95002F15CE /* SVN.geojson in Resources */,
@@ -2362,6 +2446,7 @@
 				88FF5E161BC31D95002F15CE /* BRB.geojson in Resources */,
 				88FF5C881BC31D6D002F15CE /* bar-24@2x.png in Resources */,
 				E53CF5DE1E1EAF6A000FB5C1 /* amenities.sld in Resources */,
+				12E5ED0124DA9ED200579BC5 /* cs2b.jpg in Resources */,
 				88FF5ECB1BC31D95002F15CE /* SYR.geojson in Resources */,
 				88FF5EA71BC31D95002F15CE /* PNG.geojson in Resources */,
 				88FF5E681BC31D95002F15CE /* JPN.geojson in Resources */,
@@ -2372,6 +2457,7 @@
 				2B4BA6D91C83A22000DC1562 /* uturn.geojson in Resources */,
 				88FF5E5F1BC31D95002F15CE /* IRL.geojson in Resources */,
 				88FF5ECC1BC31D95002F15CE /* TCA.geojson in Resources */,
+				12D38F0524DAED1500FC1738 /* 12219_boat_v2_L2.mtl in Resources */,
 				88FF5E051BC31D95002F15CE /* AZE.geojson in Resources */,
 				88FF5EC31BC31D95002F15CE /* STP.geojson in Resources */,
 				88FF5E0C1BC31D95002F15CE /* BGR.geojson in Resources */,
@@ -2518,6 +2604,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -2543,7 +2630,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -2575,6 +2662,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -2594,7 +2682,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -2610,7 +2698,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = BFXSGS6V8N;
+				DEVELOPMENT_TEAM = XK44V4G34K;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -2622,9 +2710,9 @@
 					"\"$(SRCROOT)/../../../common/local_libs/eigen\"",
 				);
 				INFOPLIST_FILE = AutoTester/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.mousebirdconsulting.AutoTester;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minutia.AutoTester;
 				PRODUCT_NAME = AutoTester;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2642,7 +2730,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = BFXSGS6V8N;
+				DEVELOPMENT_TEAM = XK44V4G34K;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -2654,9 +2742,9 @@
 					"\"$(SRCROOT)/../../../common/local_libs/eigen\"",
 				);
 				INFOPLIST_FILE = AutoTester/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.mousebirdconsulting.AutoTester;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minutia.AutoTester;
 				PRODUCT_NAME = AutoTester;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/AutoTester/MaplyTesterBridge.h";

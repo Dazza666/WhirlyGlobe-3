@@ -54,11 +54,26 @@
             style.drawPriority = kMaplyLabelDrawPriorityDefault+layer_order;
             break;
         case GeomTypeLineString:
-            style = [[MaplyVectorStyleSimpleLinear alloc] initWithGen:self viewC:viewC];
+            if ([attributes[@"layer_name"] isEqualToString:@"ne_10m_admin_0_boundary_lines_land"]) {
+                style = [[MaplyVectorStyleSimpleLinear alloc] initWithGen:self viewC:viewC andColor:[UIColor blackColor]];
+            }
+            else if ([attributes[@"layer_name"] isEqualToString:@"ne_10m_roads"]) {
+                style = [[MaplyVectorStyleSimpleLinear alloc] initWithGen:self viewC:viewC andColor:[UIColor orangeColor]];
+            }
+            
+            //style = [[MaplyVectorStyleSimpleLinear alloc] initWithGen:self viewC:viewC];
             style.drawPriority = kMaplyVectorDrawPriorityDefault+1000+layer_order;
             break;
         case GeomTypePolygon:
-            style = [[MaplyVectorStyleSimplePolygon alloc] initWithGen:self viewC:viewC];
+            
+            if ([attributes[@"layer_name"] isEqualToString:@"land_polygons"]) {
+                style = [[MaplyVectorStyleSimplePolygon alloc] initWithGen:self viewC:viewC andColor:[UIColor colorWithRed:66/255.0 green:99/255.0 blue:105/255.0 alpha:1]];
+            }
+            else if ([attributes[@"layer_name"] isEqualToString:@"ne_10m_urban_areas"]) {
+                style = [[MaplyVectorStyleSimplePolygon alloc] initWithGen:self viewC:viewC andColor:[UIColor grayColor]];
+            }
+
+            //style = [[MaplyVectorStyleSimplePolygon alloc] initWithGen:self viewC:viewC];
             style.drawPriority = kMaplyVectorDrawPriorityDefault+layer_order;
             break;
         default:
@@ -135,6 +150,15 @@
     return self;
 }
 
+- (id)initWithGen:(MaplyVectorStyleSimpleGenerator *)gen viewC:(NSObject<MaplyRenderControllerProtocol> *)viewC andColor:(UIColor*) color
+{
+    //darren
+    self = [super initWithGen:gen viewC:viewC];
+    _color = color;
+    
+    return self;
+}
+
 - (void)buildObjects:(NSArray * _Nonnull)vecObjs forTile:(MaplyVectorTileData *)tileInfo viewC:(NSObject<MaplyRenderControllerProtocol> * _Nonnull)viewC
 {
     NSMutableArray *tessObjs = [NSMutableArray array];
@@ -207,6 +231,14 @@
     float green = drand48()/2.0;
     float blue = drand48()/2.0;
     _color = [UIColor colorWithRed:red+0.5 green:green+0.5 blue:blue+0.5 alpha:1.0];
+    
+    return self;
+}
+
+-(id)initWithGen:(MaplyVectorStyleSimpleGenerator *)gen viewC:(NSObject<MaplyRenderControllerProtocol> *)viewC andColor:(UIColor *)color {
+    //darren
+    self = [super initWithGen:gen viewC:viewC];
+    _color = color;
     
     return self;
 }

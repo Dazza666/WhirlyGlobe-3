@@ -120,9 +120,9 @@ public class GeographyClassTestCase: MaplyTestCase {
     
     public override func setUpWithGlobe(_ globeVC: WhirlyGlobeViewController) {
         setupLayers(globeVC)
-        globeVC.animate(toPosition: MaplyCoordinateMakeWithDegrees(1.324502, 51.121632), time: 1.0)
+        globeVC.animate(toPosition: MaplyCoordinateMakeWithDegrees(1.324502, 51.121632), time: 0.0)
         
-        globeVC.animate(toPosition: MaplyCoordinateMakeWithDegrees(1.324502, 51.121632), height: 0.01, heading: 0, time: 1)
+        //globeVC.animate(toPosition: MaplyCoordinateMakeWithDegrees(1.324502, 51.121632), height: 0.01, heading: 0, time: 1)
         //globeVC.height(forMapScale: 10)
 //        animateToPosition:(MaplyCoordinate)newPos height:(float)newHeight heading:(float)newHeading time:(NSTimeInterval)howLong;
         //globeVC.keepNorthUp = true
@@ -135,7 +135,7 @@ public class GeographyClassTestCase: MaplyTestCase {
     public override func setUpWithMap(_ mapVC: MaplyViewController) {
         setupLayers(mapVC)
         //mapVC.animate(toPosition: MaplyCoordinateMakeWithDegrees(-70.101479, -54.650212), time: 1.0)
-        mapVC.animate(toPosition: MaplyCoordinateMakeWithDegrees(1.324502, 51.121632), height: 0.01, heading: 0, time: 10)
+        mapVC.animate(toPosition: MaplyCoordinateMakeWithDegrees(1.324502, 51.121632), height: 1.01, heading: 0, time: 10)
         //mapVC.height = 12
     }
 

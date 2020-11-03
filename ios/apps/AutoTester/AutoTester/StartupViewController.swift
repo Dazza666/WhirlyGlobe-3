@@ -11,61 +11,61 @@ import UIKit
 class StartupViewController: UITableViewController, UIPopoverPresentationControllerDelegate {
 
 	let tests = [
-        StamenWatercolorRemote(),
+//        StamenWatercolorRemote(),
 		GeographyClassTestCase(),
-        NASAGIBSTestCase(),
-		AnimatedBasemapTestCase(),
-        ImageReloadTestCase(),
-        BNGCustomMapTestCase(),
-        BNGTestCase(),
+//        NASAGIBSTestCase(),
+//		AnimatedBasemapTestCase(),
+//        ImageReloadTestCase(),
+//        BNGCustomMapTestCase(),
+//        BNGTestCase(),
         // Note: Endpoint missing
 //        WMSTestCase(),
 
-        ScreenLabelsTestCase(),
+//        ScreenLabelsTestCase(),
 		ScreenMarkersTestCase(),
 		MarkersTestCase(),
 		AnimatedMarkersTestCase(),
-        ClusteredMarkersTestCase(),
-        LabelAnimationTestCase(),
+//        ClusteredMarkersTestCase(),
+//        LabelAnimationTestCase(),
 
-        VectorsTestCase(),
-        GreatCircleTestCase(),
+//        VectorsTestCase(),
+//        GreatCircleTestCase(),
 		VectorStyleTestCase(),
-		VectorHoleTestCase(),
-        ShapefileTestCase(),
-		WideVectorsTestCase(),
-		TextureVectorTestCase(),
-        SimpleStyleTestCase(),
-        GeoJSONStyleTestCase(),
-        LoftedPolysTestCase(),
+//		VectorHoleTestCase(),
+//        ShapefileTestCase(),
+//		WideVectorsTestCase(),
+//		TextureVectorTestCase(),
+//        SimpleStyleTestCase(),
+//        GeoJSONStyleTestCase(),
+//        LoftedPolysTestCase(),
 
         // Note: 3D labels are currently broken
 //        LabelsTestCase(),
-		StickersTestCase(),
-
-        PagingLayerTestCase(),
+//		StickersTestCase(),
+//
+//        PagingLayerTestCase(),
         VectorMBTilesTestCase(),
-        CartoDBTestCase(),
-        MapTilerTestCase(),
-        MapboxTestCase(),
-
-		ShapesTestCase(),
+//        CartoDBTestCase(),
+//        MapTilerTestCase(),
+//        MapboxTestCase(),
+//
+//		ShapesTestCase(),
         ExtrudedModelTestCase(),
         ModelsTestCase(),
         BillboardTestCase(),
-        RunwayBuilderTestCase(),
-        StarsSunTestCase(),
-
-		FindHeightTestCase(),
-		FullAnimationTest(),
-		AnimationDelegateTestCase(),
-		LocationTrackingSimTestCase(),
-		LocationTrackingRealTestCase(),
-        
-        OfflineRenderTestCase(),
-        
-        StartupShutdownTestCase(),
-        LayerStartupShutdownTestCase()
+//        RunwayBuilderTestCase(),
+//        StarsSunTestCase(),
+//
+//		FindHeightTestCase(),
+//		FullAnimationTest(),
+//		AnimationDelegateTestCase(),
+//		LocationTrackingSimTestCase(),
+//		LocationTrackingRealTestCase(),
+//
+//        OfflineRenderTestCase(),
+//
+//        StartupShutdownTestCase(),
+//        LayerStartupShutdownTestCase()
 	]
 
 	@IBOutlet weak var testsTable: UITableView!
