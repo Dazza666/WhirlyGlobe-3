@@ -11,10 +11,14 @@ import UIKit
 class StartupViewController: UITableViewController, UIPopoverPresentationControllerDelegate {
 
 	let tests = [
-//        StamenWatercolorRemote(),
-		GeographyClassTestCase(),
-//        NASAGIBSTestCase(),
-//		AnimatedBasemapTestCase(),
+        VectorMBTilesTestCase(),
+        VectorMBTilesTestCaseMed(),
+        VectorMBTilesTestCaseLow(),
+        AnimatedBasemapTestCase(),
+     //   StamenWatercolorRemote(),
+	//	GeographyClassTestCase(),
+     //   NASAGIBSTestCase(),
+		
 //        ImageReloadTestCase(),
 //        BNGCustomMapTestCase(),
 //        BNGTestCase(),
@@ -22,15 +26,15 @@ class StartupViewController: UITableViewController, UIPopoverPresentationControl
 //        WMSTestCase(),
 
 //        ScreenLabelsTestCase(),
-		ScreenMarkersTestCase(),
-		MarkersTestCase(),
-		AnimatedMarkersTestCase(),
+//		ScreenMarkersTestCase(),
+//		MarkersTestCase(),
+//		AnimatedMarkersTestCase(),
 //        ClusteredMarkersTestCase(),
 //        LabelAnimationTestCase(),
 
 //        VectorsTestCase(),
 //        GreatCircleTestCase(),
-		VectorStyleTestCase(),
+//		VectorStyleTestCase(),
 //		VectorHoleTestCase(),
 //        ShapefileTestCase(),
 //		WideVectorsTestCase(),
@@ -44,15 +48,15 @@ class StartupViewController: UITableViewController, UIPopoverPresentationControl
 //		StickersTestCase(),
 //
 //        PagingLayerTestCase(),
-        VectorMBTilesTestCase(),
+
 //        CartoDBTestCase(),
 //        MapTilerTestCase(),
 //        MapboxTestCase(),
 //
 //		ShapesTestCase(),
-        ExtrudedModelTestCase(),
-        ModelsTestCase(),
-        BillboardTestCase(),
+      //  ExtrudedModelTestCase(),
+     //   ModelsTestCase(),
+     //   BillboardTestCase(),
 //        RunwayBuilderTestCase(),
 //        StarsSunTestCase(),
 //

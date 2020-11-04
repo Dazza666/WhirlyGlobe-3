@@ -10,7 +10,7 @@ import UIKit
 
 class AnimatedBasemapTestCase: MaplyTestCase {
 
-	let geographyClass = GeographyClassTestCase()
+	let geographyClass = VectorMBTilesTestCaseLow()
 	let cacheDir = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)[0]
     var imageLayer : MaplyQuadImageFrameLoader? = nil
     var imageAnimator : MaplyQuadImageFrameAnimator? = nil
@@ -19,7 +19,7 @@ class AnimatedBasemapTestCase: MaplyTestCase {
 	override init() {
 		super.init()
 
-		self.name = "Animated basemap"
+		self.name = "Rain Demo"
 		self.implementations = [.globe, .map]
 	}
     
@@ -43,7 +43,7 @@ class AnimatedBasemapTestCase: MaplyTestCase {
         varTarget = MaplyVariableTarget(type: .imageIntRGBA, viewC: baseVC)
         varTarget?.setScale(0.5)
         varTarget?.clearEveryFrame = true
-        varTarget?.drawPriority = kMaplyImageLayerDrawPriorityDefault + 1000
+        varTarget?.drawPriority = kMaplyParticleSystemDrawPriorityDefault + 1009
         
         // Parameters describing how we want a globe broken down
         let sampleParams = MaplySamplingParams()
@@ -51,9 +51,9 @@ class AnimatedBasemapTestCase: MaplyTestCase {
         sampleParams.coverPoles = false
         sampleParams.edgeMatching = false
         sampleParams.minZoom = 0
-        sampleParams.maxZoom = 6
+        sampleParams.maxZoom = 10
         sampleParams.singleLevel = true
-        sampleParams.minImportance = 1024.0*1024.0
+        //sampleParams.minImportance = 1024.0*1024.0
 
         imageLayer = MaplyQuadImageFrameLoader(params: sampleParams, tileInfos: tileSources, viewC: baseVC)
 //        imageLayer?.debugMode = true;

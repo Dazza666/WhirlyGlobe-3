@@ -74,7 +74,7 @@
             }
 
             //style = [[MaplyVectorStyleSimplePolygon alloc] initWithGen:self viewC:viewC];
-            style.drawPriority = kMaplyVectorDrawPriorityDefault+layer_order;
+            style.drawPriority = kMaplyVectorDrawPriorityDefault+layer_order+1;
             break;
         default:
             break;

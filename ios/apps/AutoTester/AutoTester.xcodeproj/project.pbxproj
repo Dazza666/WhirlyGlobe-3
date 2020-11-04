@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1206CCDB2552D047008B61B5 /* VectorMBTilesTestCaseLow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1206CCDA2552D047008B61B5 /* VectorMBTilesTestCaseLow.swift */; };
+		1206CCDD2552D06F008B61B5 /* output_test.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 1206CCDC2552D06F008B61B5 /* output_test.mbtiles */; };
+		1206CCDF2552D7D3008B61B5 /* VectorMBTilesTestCaseMed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1206CCDE2552D7D3008B61B5 /* VectorMBTilesTestCaseMed.swift */; };
+		1206CCE12552F55E008B61B5 /* output_test_10.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 1206CCE02552F55E008B61B5 /* output_test_10.mbtiles */; };
 		12586E2324D1E77C0062AB2C /* zoom0.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 12586E2124D1E77C0062AB2C /* zoom0.mbtiles */; };
 		12586E2524D1E8170062AB2C /* coastline-roads-urban.mbtiles in Resources */ = {isa = PBXBuildFile; fileRef = 12586E2424D1E8160062AB2C /* coastline-roads-urban.mbtiles */; };
 		12D38F0524DAED1500FC1738 /* 12219_boat_v2_L2.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 12D38F0024DAED1500FC1738 /* 12219_boat_v2_L2.mtl */; };
@@ -614,6 +618,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1206CCDA2552D047008B61B5 /* VectorMBTilesTestCaseLow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VectorMBTilesTestCaseLow.swift; sourceTree = "<group>"; };
+		1206CCDC2552D06F008B61B5 /* output_test.mbtiles */ = {isa = PBXFileReference; lastKnownFileType = file; path = output_test.mbtiles; sourceTree = "<group>"; };
+		1206CCDE2552D7D3008B61B5 /* VectorMBTilesTestCaseMed.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VectorMBTilesTestCaseMed.swift; sourceTree = "<group>"; };
+		1206CCE02552F55E008B61B5 /* output_test_10.mbtiles */ = {isa = PBXFileReference; lastKnownFileType = file; path = output_test_10.mbtiles; sourceTree = "<group>"; };
 		12586E2124D1E77C0062AB2C /* zoom0.mbtiles */ = {isa = PBXFileReference; lastKnownFileType = file; path = zoom0.mbtiles; sourceTree = "<group>"; };
 		12586E2424D1E8160062AB2C /* coastline-roads-urban.mbtiles */ = {isa = PBXFileReference; lastKnownFileType = file; path = "coastline-roads-urban.mbtiles"; sourceTree = "<group>"; };
 		12D38EFE24DAED1500FC1738 /* boat_roof_accessory_diffuse.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = boat_roof_accessory_diffuse.jpg; sourceTree = "<group>"; };
@@ -1384,6 +1392,8 @@
 				88BF115E1BCDA9730002205E /* StamenWatercolorRemote.swift */,
 				D8200C971BE93E6E00B22CF5 /* StarsSunTestCase.swift */,
 				D8200CA01BE9563F00B22CF5 /* StickersTestCase.swift */,
+				1206CCDA2552D047008B61B5 /* VectorMBTilesTestCaseLow.swift */,
+				1206CCDE2552D7D3008B61B5 /* VectorMBTilesTestCaseMed.swift */,
 				2B1C264E1C90FFFC00C71B0A /* VectorMBTilesTestCase.swift */,
 				D8341A6F1BE2C8D200411A46 /* VectorsTestCase.h */,
 				D8341A701BE2C8D200411A46 /* VectorsTestCase.m */,
@@ -1438,6 +1448,8 @@
 		88E4B8C11B83B6AB0050D21B /* AutoTester */ = {
 			isa = PBXGroup;
 			children = (
+				1206CCDC2552D06F008B61B5 /* output_test.mbtiles */,
+				1206CCE02552F55E008B61B5 /* output_test_10.mbtiles */,
 				12586E2424D1E8160062AB2C /* coastline-roads-urban.mbtiles */,
 				12586E2124D1E77C0062AB2C /* zoom0.mbtiles */,
 				2B29944A243BA08D00677DE4 /* MapboxKindaMap.swift */,
@@ -2052,7 +2064,7 @@
 				TargetAttributes = {
 					88E4B8BE1B83B6AB0050D21B = {
 						CreatedOnToolsVersion = 6.4;
-						DevelopmentTeam = XK44V4G34K;
+						DevelopmentTeam = DW3C5BBY9B;
 						LastSwiftMigration = 0930;
 						ProvisioningStyle = Automatic;
 					};
@@ -2237,6 +2249,7 @@
 				88FF5C9C1BC31D6D002F15CE /* cross-24@2x.png in Resources */,
 				88FF5E441BC31D95002F15CE /* GBR.geojson in Resources */,
 				88FF5E331BC31D95002F15CE /* DNK.geojson in Resources */,
+				1206CCDD2552D06F008B61B5 /* output_test.mbtiles in Resources */,
 				88FF5E251BC31D95002F15CE /* COK.geojson in Resources */,
 				88FF5EB61BC31D95002F15CE /* SEN.geojson in Resources */,
 				88FF5E0B1BC31D95002F15CE /* BGD.geojson in Resources */,
@@ -2427,6 +2440,7 @@
 				88FF5E311BC31D95002F15CE /* DJI.geojson in Resources */,
 				88FF5E261BC31D95002F15CE /* COL.geojson in Resources */,
 				88FF5CD31BC31D6D002F15CE /* shop-24@2x.png in Resources */,
+				1206CCE12552F55E008B61B5 /* output_test_10.mbtiles in Resources */,
 				88FF5CCC1BC31D6D002F15CE /* religious-christian-24@2x.png in Resources */,
 				88FF5E4F1BC31D95002F15CE /* GRD.geojson in Resources */,
 				88FF5E101BC31D95002F15CE /* BLM.geojson in Resources */,
@@ -2655,12 +2669,14 @@
 				D8F2FE271BE7BD630058A310 /* LabelsTestCase.m in Sources */,
 				E5679F4E1CB7669400369A15 /* FullAnimationTest.m in Sources */,
 				E5D2D65F1DE65CE400E02305 /* LocationTrackingSimTestCase.swift in Sources */,
+				1206CCDF2552D7D3008B61B5 /* VectorMBTilesTestCaseMed.swift in Sources */,
 				E5CC4E201DF7CBEA00C0D4DE /* LocationTrackingRealTestCase.swift in Sources */,
 				2BBCE41C2220A4170013E158 /* PagingLayerTestCase.m in Sources */,
 				2B4B30AB2395E0DE00854073 /* StartupShutdownTestCase.swift in Sources */,
 				D8F2FE2C1BE7CAD30058A310 /* MegaMarkersTestCase.m in Sources */,
 				2B4B30AA2395E0DE00854073 /* MapboxTestCase.swift in Sources */,
 				D8341A711BE2C8D200411A46 /* VectorsTestCase.m in Sources */,
+				1206CCDB2552D047008B61B5 /* VectorMBTilesTestCaseLow.swift in Sources */,
 				2B753DE221EEB7F900DE98BA /* StarsSunTestCase.swift in Sources */,
 				2B81009D221F4EA900CFF779 /* CartoDBTestCase.m in Sources */,
 				2BC3D6F0220B900A00CE91D0 /* StartupViewController.swift in Sources */,
@@ -2823,7 +2839,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = XK44V4G34K;
+				DEVELOPMENT_TEAM = DW3C5BBY9B;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -2837,7 +2853,7 @@
 				INFOPLIST_FILE = AutoTester/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.minutia.AutoTester;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oceansignal.mappingtest;
 				PRODUCT_NAME = AutoTester;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2855,7 +2871,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = XK44V4G34K;
+				DEVELOPMENT_TEAM = DW3C5BBY9B;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -2869,7 +2885,7 @@
 				INFOPLIST_FILE = AutoTester/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.minutia.AutoTester;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oceansignal.mappingtest;
 				PRODUCT_NAME = AutoTester;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/AutoTester/MaplyTesterBridge.h";

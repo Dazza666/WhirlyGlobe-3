@@ -18,7 +18,7 @@ class VectorMBTilesTestCase: MaplyTestCase {
     override init() {
         super.init()
         
-        self.name = "Vector MBTiles"
+        self.name = "High Detail"
        self.implementations = [.map, .globe]
     }
     
